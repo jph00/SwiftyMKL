@@ -1,28 +1,26 @@
 import Foundation
 
 // These 2 funcs are placeholders - actually would come from MKL
-func cblas_sasum(_ c:Int32, _ d:Array<Float>, _ n:Int32)->Float {
-  return d.reduce(0.0) {$0 + abs($1)}
-}
-func cblas_dasum(_ c:Int32, _ d:Array<Double>, _ n:Int32)->Double {
-  return d.reduce(0.0) {$0 + abs($1)}
-}
+func cblas_sasum(_ c:Int32, _ d:Array<Float>, _ n:Int32)->Float { return d.reduce(0.0) {$0 + abs($1)} }
+func cblas_dasum(_ c:Int32, _ d:Array<Double>, _ n:Int32)->Double { return d.reduce(0.0) {$0 + abs($1)} }
 
-public protocol Vector : Equatable, CustomStringConvertible, ExpressibleByArrayLiteral,
-    RandomAccessCollection, MutableCollection where Index==Int {
-  associatedtype Element
-  var data:Array<Element> {get set}
-  init(_ data_:Array<Element>)
-
-  func asum(incx:Int)->Element
+public protocol VectorBase: Equatable, ExpressibleByArrayLiteral, CustomStringConvertible,
+    RandomAccessCollection, MutableCollection {
+  associatedtype Scalar
+  var data:Array<Scalar> {get set}
+  init(_ data_:Array<Scalar>)
 }
 
-extension Vector where Element: FloatingPoint {
+public protocol Vector: VectorBase where Scalar==Element {
+  func asum()->Scalar
+}
+
+extension Vector where Scalar: FloatingPoint {
   public var count:Int {get {return data.count}}
   public var c:Int32 {get {return numericCast(count)}}
 
   // ExpressibleByArrayLiteral
-  public init(arrayLiteral data_: Element...) { self.init(data_) }
+  public init(arrayLiteral data_: Scalar...) { self.init(data_) }
   //CustomStringConvertible
   public var description: String { return "V\(data.description)" }
   // Equatable
@@ -32,11 +30,10 @@ extension Vector where Element: FloatingPoint {
   public var startIndex: Int { return 0 }
   public var endIndex: Int { return count }
   // MutableCollection
-  public subscript(i: Index) -> Element {
+  public subscript(i: Int) -> Scalar {
     get { return data[i] }
     set { data[i] = newValue }
   }
-
 }
 
 public struct VectorF: Vector {
@@ -49,14 +46,10 @@ public struct VectorD: Vector {
   public init(_ data_:Array<Double>) {data=data_}
 }
 
-extension Vector where Element: FloatingPoint {
-  func asum(incx:Int=1)->Element { return asum(incx:incx) }
+extension Vector where Scalar==Float {
+  public func asum()->Scalar { return cblas_sasum(c, data, 1) }
 }
-
-extension Vector where Element==Float {
-  public func asum(incx:Int=1)->Element { return cblas_sasum(c, data, numericCast(incx)) }
-}
-extension Vector where Element==Double {
-  public func asum(incx:Int=1)->Element { return cblas_dasum(c, data, numericCast(incx)) }
+extension Vector where Scalar==Double {
+  public func asum()->Scalar { return cblas_dasum(c, data, 1) }
 }
 

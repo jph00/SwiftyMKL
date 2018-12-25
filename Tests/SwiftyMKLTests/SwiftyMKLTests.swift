@@ -1,15 +1,15 @@
 import XCTest
 @testable import SwiftyMKL
 
-protocol TestProtocol where T:Vector, T.Element:FloatingPoint {
+protocol TestProtocol where T:Vector {
   associatedtype T
   var a:T {get}
   var z:T.Element {get}
 }
 
-extension TestProtocol {
+extension TestProtocol where T.Element:FloatingPoint {
   func testASum() {
-    let exp = a.reduce(z) {$0 + abs($1)}
+    let exp = a.reduce(z) {$0 + $1}
     XCTAssertEqual(a.asum(), exp)
   }
 }
