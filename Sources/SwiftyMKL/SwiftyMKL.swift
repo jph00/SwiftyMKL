@@ -13,9 +13,11 @@ public protocol Vector : Equatable, CustomStringConvertible, ExpressibleByArrayL
   associatedtype Element
   var data:Array<Element> {get set}
   init(_ data_:Array<Element>)
+
+  func asum(incx:Int)->Element
 }
 
-extension Vector where Element: Numeric {
+extension Vector where Element: FloatingPoint {
   public var count:Int {get {return data.count}}
   public var c:Int32 {get {return numericCast(count)}}
 
@@ -34,6 +36,7 @@ extension Vector where Element: Numeric {
     get { return data[i] }
     set { data[i] = newValue }
   }
+
 }
 
 public struct VectorF: Vector {
@@ -44,6 +47,10 @@ public struct VectorF: Vector {
 public struct VectorD: Vector {
   public var data:Array<Double>
   public init(_ data_:Array<Double>) {data=data_}
+}
+
+extension Vector where Element: FloatingPoint {
+  func asum(incx:Int=1)->Element { return asum(incx:incx) }
 }
 
 extension Vector where Element==Float {

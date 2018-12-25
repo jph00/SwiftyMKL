@@ -24,23 +24,3 @@ class SwiftyMKLTestsDouble: XCTestCase, TestProtocol {
   let z:Double = 0.0
 }
 
-
-/*
-class SwiftyMKLTests: XCTestCase {
-}
-
-class SwiftyMKLTestsFloat: SwiftyMKLTests {
-  func testASum() {
-    let a: VectorF = [1.0, 2, 3]
-    XCTAssertEqual(a.asum(), 6.0)
-  }
-}
-
-class SwiftyMKLTestsDouble: SwiftyMKLTests {
-  func testASum() {
-    let a: VectorD = [1.0, 2, 3]
-    XCTAssertEqual(a.asum(), 6.0)
-  }
-}
-*/
-
