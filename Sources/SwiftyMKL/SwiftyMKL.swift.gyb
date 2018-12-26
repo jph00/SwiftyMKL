@@ -1,0 +1,66 @@
+import Foundation
+import CMKL
+
+%{
+def lower1(s): return s[:1].lower() + s[1:]
+vml1 = """Ln Abs Inv Sqr Exp Cos Sin Tan Erf Sqrt Cbrt Cosh Sinh Tanh Acos Asin Atan Erfc Ceil Rint Expm1 Log10 Log1p
+  Acosh Asinh Atanh Floor Round Trunc ErfInv Pow3o2 Pow2o3 InvSqrt InvCbrt NearbyInt """.split()
+ipp1 = "Sum Mean StdDev Max Min".split()
+vml2 = "Add Sub Mul Div Pow Hypot Atan2".split()
+ipp2 = "Add Sub Mul Div".split()
+}%
+
+public protocol Vector: Equatable, ExpressibleByArrayLiteral, CustomStringConvertible,
+    RandomAccessCollection, MutableCollection where Element:SignedNumeric {
+  associatedtype Element
+  var data:Array<Element> {get set}
+  init(_ data_:Array<Element>)
+
+  func asum()->Element
+% for o in vml1:
+  func ${lower1(o)}(_ dest: inout Self)
+% end
+}
+
+extension Vector {
+  public var count:Int {get {return data.count}}
+  public var c:Int32 {get {return numericCast(count)}}
+
+  // ExpressibleByArrayLiteral
+  public init(arrayLiteral data_: Element...) { self.init(data_) }
+  //CustomStringConvertible
+  public var description: String { return "V\(data.description)" }
+  // Equatable
+  public static func ==(lhs:Self,           rhs:Self) -> Bool { return lhs.data == rhs.data }
+  public static func ==(lhs:Array<Element>, rhs:Self) -> Bool { return lhs      == rhs.data }
+  public static func ==(lhs:Self, rhs:Array<Element>) -> Bool { return lhs.data == rhs      }
+  // RandomAccessCollection
+  public var indices: Range<Int> { return 0..<count }
+  public var startIndex: Int { return 0 }
+  public var endIndex: Int { return count }
+  // MutableCollection
+  public subscript(i: Int) -> Element {
+    get { return data[i] }
+    set { data[i] = newValue }
+  }
+}
+
+% for t,l,n in (('Float', 's', '32'), ('Double', 'd', '64')):
+extension Vector where Element==${t} {
+  public func asum()->Element { return cblas_${l}asum(c, data, 1) }
+  % for o in vml1:
+    public func ${lower1(o)}(_ dest: inout Self) { v${l}${o}(c, data, &dest.data) }
+  % end
+}
+
+public struct Vector${t}: Vector {
+  public var data:Array<${t}>
+  public init(_ data_:Array<${t}>) {data=data_}
+}
+% end
+
+/*
+let a:VectorS<Float> = [1.0, 2, 3]
+print(a.asum())
+*/
+

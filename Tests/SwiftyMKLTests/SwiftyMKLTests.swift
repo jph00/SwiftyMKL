@@ -15,14 +15,12 @@ extension TestProtocol where T.Element:FloatingPoint {
 }
 
 class SwiftyMKLTestsFloat:  XCTestCase, TestProtocol {
-  let a:VectorF = [1.0, 2, 3]
-  //let a:VectorS<Float> = [1.0, 2, 3]
+  let a:VectorFloat = [1.0, 2, 3]
   let z:Float = 0.0
 }
 
 class SwiftyMKLTestsDouble: XCTestCase, TestProtocol {
-  let a:VectorD = [1.0, 2, 3]
-  //let a:VectorS<Double> = [1.0, 2, 3]
+  let a:VectorDouble = [1.0, 2, 3]
   let z:Double = 0.0
 }
 

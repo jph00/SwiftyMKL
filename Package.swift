@@ -8,8 +8,11 @@ let package = Package(
       .library( name: "SwiftyMKL", type: .static, targets: ["SwiftyMKL"]),
     ],
     targets: [
-        .target( name: "SwiftyMKL"),
-        .testTarget( name: "SwiftyMKLTests", dependencies: ["SwiftyMKL"]),
+        .systemLibrary(name: "CMKL", pkgConfig: "mkl-static-lp64-seq"),
+        .systemLibrary(name: "CIPP"),
+        .target( name: "SwiftyMKL", dependencies: ["CMKL", "CIPP"]),
+        //.target( name: "mkl-tool", dependencies: ["SwiftyMKL"]),
+        .testTarget( name: "SwiftyMKLTests", dependencies: ["SwiftyMKL", "CMKL", "CIPP"]),
     ]
 )
 
