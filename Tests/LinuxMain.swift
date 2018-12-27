@@ -1,18 +1,26 @@
 import XCTest
 @testable import SwiftyMKLTests
 
-extension SwiftyMKLTestsDouble {
-  static var allTests : [(String, (SwiftyMKLTestsDouble)->()->())] {
-    return [
-      ("testASum", testASum),
-    ]
-  }
-}
 
 extension SwiftyMKLTestsFloat {
   static var allTests : [(String, (SwiftyMKLTestsFloat)->()->())] {
     return [
-      ("testAdd", testASum),
+      ("testVersion", testVersion),
+      ("testASum", testASum),
+      ("testAbs", testAbs),
+      ("testAdd", testAdd),
+      ("testDivC", testDivC),
+    ]
+  }
+}
+extension SwiftyMKLTestsDouble {
+  static var allTests : [(String, (SwiftyMKLTestsDouble)->()->())] {
+    return [
+      ("testVersion", testVersion),
+      ("testASum", testASum),
+      ("testAbs", testAbs),
+      ("testAdd", testAdd),
+      ("testDivC", testDivC),
     ]
   }
 }

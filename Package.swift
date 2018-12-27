@@ -11,7 +11,7 @@ let package = Package(
         .systemLibrary(name: "CMKL", pkgConfig: "mkl-static-lp64-seq"),
         .systemLibrary(name: "CIPP"),
         .target( name: "SwiftyMKL", dependencies: ["CMKL", "CIPP"]),
-        //.target( name: "mkl-tool", dependencies: ["SwiftyMKL"]),
+        .target( name: "mkl-tool", dependencies: ["SwiftyMKL"]),
         .testTarget( name: "SwiftyMKLTests", dependencies: ["SwiftyMKL", "CMKL", "CIPP"]),
     ]
 )

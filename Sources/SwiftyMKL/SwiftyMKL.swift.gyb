@@ -1,66 +1,135 @@
 import Foundation
 import CMKL
+import CIPP
+
+public func defaultValue<T>() -> T {
+  let ptr = UnsafeMutablePointer<T>.allocate(capacity:1)
+  let retval = ptr.pointee
+  ptr.deallocate()
+  return retval;
+}
 
 %{
-def lower1(s): return s[:1].lower() + s[1:]
-vml1 = """Ln Abs Inv Sqr Exp Cos Sin Tan Erf Sqrt Cbrt Cosh Sinh Tanh Acos Asin Atan Erfc Ceil Rint Expm1 Log10 Log1p
-  Acosh Asinh Atanh Floor Round Trunc ErfInv Pow3o2 Pow2o3 InvSqrt InvCbrt NearbyInt """.split()
-ipp1 = "Sum Mean StdDev Max Min".split()
-vml2 = "Add Sub Mul Div Pow Hypot Atan2".split()
-ipp2 = "Add Sub Mul Div".split()
+def lower_split(s): return [(o, o[:1].lower() + o[1:]) for o in s.split()]
+# vml (Vector)->Vector
+vml1 = lower_split("""Ln Abs Inv Sqr Exp Cos Sin Tan Erf Sqrt Cbrt Cosh Sinh Tanh Acos Asin Atan Erfc Ceil Rint Expm1 Log10 Log1p
+  Acosh Asinh Atanh Floor Round Trunc ErfInv Pow3o2 Pow2o3 InvSqrt InvCbrt NearbyInt """)
+# ipp (Vector)->T
+ipp1 = lower_split("Sum Mean StdDev Max Min")
+# vml (Vector,Vector)->Vector
+vml2 = lower_split("Add Sub Mul Div Pow Hypot Atan2")
+# ipp (Vector,Element)->Vector
+ipp2 = lower_split("Add Sub Mul Div")
 }%
 
-public protocol Vector: Equatable, ExpressibleByArrayLiteral, CustomStringConvertible,
-    RandomAccessCollection, MutableCollection where Element:SignedNumeric {
-  associatedtype Element
-  var data:Array<Element> {get set}
-  init(_ data_:Array<Element>)
-
+public protocol Vector: BaseVector where Element: SignedNumeric {
   func asum()->Element
-% for o in vml1:
-  func ${lower1(o)}(_ dest: inout Self)
+
+% for u,o in vml1:
+  func ${o}(_ dest: Self)
+  func ${o}_()
+  func ${o}()->Self
 % end
+
+% for u,o in ipp1:
+  func ${o}()->Element
+% end # ipp1
+
+% for u,o in vml2:
+  func ${o}(_ b:Self, _ dest:Self)
+  func ${o}_(_ b:Self)
+  func ${o}(_ b:Self)->Self
+% end # ipp1
+
+% for u,o in ipp2:
+  func ${o}(_ b:Element, _ dest:Self)
+  func ${o}_(_ b:Element)
+  func ${o}(_ b:Element)->Self
+% end # ipp2
+
+  static func + (lhs:Self, rhs:Self) -> Self 
+  static func - (lhs:Self, rhs:Self) -> Self 
+  static func * (lhs:Self, rhs:Self) -> Self 
+  static func / (lhs:Self, rhs:Self) -> Self 
+  static func + (lhs:Self, rhs:Element) -> Self 
+  static func + (lhs:Element, rhs:Self) -> Self 
+  static func - (lhs:Self, rhs:Element) -> Self 
+  static func * (lhs:Self, rhs:Element) -> Self 
+  static func * (lhs:Element, rhs:Self) -> Self 
+  static func / (lhs:Self, rhs:Element) -> Self 
+  static func += (lhs:Self, rhs:Self) 
+  static func -= (lhs:Self, rhs:Self) 
+  static func *= (lhs:Self, rhs:Self) 
+  static func /= (lhs:Self, rhs:Self) 
+  static func += (lhs:Self, rhs:Element) 
+  static func -= (lhs:Self, rhs:Element) 
+  static func *= (lhs:Self, rhs:Element) 
+  static func /= (lhs:Self, rhs:Element) 
 }
 
 extension Vector {
-  public var count:Int {get {return data.count}}
-  public var c:Int32 {get {return numericCast(count)}}
+  public var descriptionPrefix:String {return "V"}
 
-  // ExpressibleByArrayLiteral
-  public init(arrayLiteral data_: Element...) { self.init(data_) }
-  //CustomStringConvertible
-  public var description: String { return "V\(data.description)" }
-  // Equatable
-  public static func ==(lhs:Self,           rhs:Self) -> Bool { return lhs.data == rhs.data }
-  public static func ==(lhs:Array<Element>, rhs:Self) -> Bool { return lhs      == rhs.data }
-  public static func ==(lhs:Self, rhs:Array<Element>) -> Bool { return lhs.data == rhs      }
-  // RandomAccessCollection
-  public var indices: Range<Int> { return 0..<count }
-  public var startIndex: Int { return 0 }
-  public var endIndex: Int { return count }
-  // MutableCollection
-  public subscript(i: Int) -> Element {
-    get { return data[i] }
-    set { data[i] = newValue }
+  // IPP convenience functions
+  typealias ippFuncReduceHint = (PtrT,Int32,MutPtrT,IppHintAlgorithm)->IppStatus
+  typealias ippFuncReduce = (PtrT,Int32,MutPtrT)->IppStatus
+  func ipp_reduce(_ f:(MutPtrT)->IppStatus)->Element {
+    var res:Element=defaultValue(); let _=f(&res); return res
   }
+  func ipp_reduce(_ f:ippFuncReduceHint)->Element { return ipp_reduce({f(p, c, $0, ippAlgHintFast)}) }
+  func ipp_reduce(_ f:ippFuncReduce    )->Element { return ipp_reduce({f(p, c, $0)}) }
 }
 
 % for t,l,n in (('Float', 's', '32'), ('Double', 'd', '64')):
 extension Vector where Element==${t} {
-  public func asum()->Element { return cblas_${l}asum(c, data, 1) }
-  % for o in vml1:
-    public func ${lower1(o)}(_ dest: inout Self) { v${l}${o}(c, data, &dest.data) }
-  % end
+  public func asum()->Element { return cblas_${l}asum(c, p, 1) }
+  public func nrm2()->Element { return cblas_${l}nrm2(c, p, 1) }
+
+  % for u,o in vml1:
+    public func ${o}(_ dest: Self) { v${l}${u}(c, p, dest.p) }
+    public func ${o}_() { ${o}(self) }
+    public func ${o}() -> Self  { return new_call(${o}) }
+  % end # vml1
+
+  % for u,o in ipp1:
+    public func ${o}()->Element { return ipp_reduce(ipps${u}_${n}f) }
+  % end # ipp1
+
+  % for u,o in vml2:
+    public func ${o}(_ b:Self, _ dest:Self) { v${l}${u}(c, p, b.p, dest.p) }
+    public func ${o}_(_ b:Self) { ${o}(b, self) }
+    public func ${o}(_ b:Self)->Self { return new_call(${o}, b) }
+  % end # vml2
+
+  % for u,o in ipp2:
+    public func ${o}(_ b:Element, _ dest:Self) { ipps${u}C_${n}f(p, b, dest.p, c) }
+    public func ${o}_(_ b:Element) { ${o}(b, self) }
+    public func ${o}(_ b:Element)->Self { return new_call(${o}, b) }
+  % end # ipp2
+
+  public static func + (lhs:Self, rhs:Self) -> Self { return lhs.add(rhs) }
+  public static func - (lhs:Self, rhs:Self) -> Self { return lhs.sub(rhs) }
+  public static func * (lhs:Self, rhs:Self) -> Self { return lhs.mul(rhs) }
+  public static func / (lhs:Self, rhs:Self) -> Self { return lhs.div(rhs) }
+  public static func + (lhs:Self, rhs:Element) -> Self { return lhs.add(rhs) }
+  public static func + (lhs:Element, rhs:Self) -> Self { return rhs.add(lhs) }
+  public static func - (lhs:Self, rhs:Element) -> Self { return lhs.sub(rhs) }
+  public static func * (lhs:Self, rhs:Element) -> Self { return lhs.mul(rhs) }
+  public static func * (lhs:Element, rhs:Self) -> Self { return rhs.mul(lhs) }
+  public static func / (lhs:Self, rhs:Element) -> Self { return lhs.div(rhs) }
+  public static func += (lhs:Self, rhs:Self) { lhs.add_(rhs) }
+  public static func -= (lhs:Self, rhs:Self) { lhs.sub_(rhs) }
+  public static func *= (lhs:Self, rhs:Self) { lhs.mul_(rhs) }
+  public static func /= (lhs:Self, rhs:Self) { lhs.div_(rhs) }
+  public static func += (lhs:Self, rhs:Element) { lhs.add_(rhs) }
+  public static func -= (lhs:Self, rhs:Element) { lhs.sub_(rhs) }
+  public static func *= (lhs:Self, rhs:Element) { lhs.mul_(rhs) }
+  public static func /= (lhs:Self, rhs:Element) { lhs.div_(rhs) }
 }
 
 public struct Vector${t}: Vector {
-  public var data:Array<${t}>
-  public init(_ data_:Array<${t}>) {data=data_}
+  public var data:AlignedStorage<${t}>
+  public init(_ data_:AlignedStorage<${t}>) {data=data_}
 }
-% end
-
-/*
-let a:VectorS<Float> = [1.0, 2, 3]
-print(a.asum())
-*/
+% end # for t,l,n
 

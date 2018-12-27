@@ -1,6 +1,9 @@
 import XCTest
 @testable import SwiftyMKL
 
+%{
+types = ('Float', 'Double')
+}%
 
 protocol TestProtocol where T:Vector {
   associatedtype T
@@ -10,28 +13,19 @@ protocol TestProtocol where T:Vector {
   var two :T.Element {get}
 }
 
-class SwiftyMKLTestsFloat:  XCTestCase, TestProtocol {
+% for t in types:
+class SwiftyMKLTests${t}:  XCTestCase, TestProtocol {
   override class func setUp() {
     super.setUp()
     IPP.setup()
   }
 
-  let zero:Float = 0.0
-  let two :Float = 2.0
-  let v1:VectorFloat = [1.0, -2,  3]
-  let v2:VectorFloat = [0.5, 12, -2]
+  let zero:${t} = 0.0
+  let two :${t} = 2.0
+  let v1:Vector${t} = [1.0, -2,  3]
+  let v2:Vector${t} = [0.5, 12, -2]
 }
-class SwiftyMKLTestsDouble:  XCTestCase, TestProtocol {
-  override class func setUp() {
-    super.setUp()
-    IPP.setup()
-  }
-
-  let zero:Double = 0.0
-  let two :Double = 2.0
-  let v1:VectorDouble = [1.0, -2,  3]
-  let v2:VectorDouble = [0.5, 12, -2]
-}
+% end
 
 extension TestProtocol where T.Element:FloatingPoint {
   func testVersion() {

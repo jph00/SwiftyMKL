@@ -2,6 +2,11 @@ import Foundation
 import CoreFoundation
 import SwiftyMKL
 
+let a:VectorFloat = [1.0, 2, 3]
+print(a.asum())
+
+
+/*
 IPP.setup()
 
 func benchmarkTime(operation: ()->()) -> Double {
@@ -52,4 +57,5 @@ print(ptr.sum())
 
 let a:Vector = [1.0,2,3]
 print(a)
+*/
 

@@ -1,0 +1,29 @@
+import XCTest
+@testable import SwiftyMKLTests
+
+%{
+import re
+lines = open('SwiftyMKLTests/SwiftyMKLTests.swift.gyb', 'r').readlines()
+tests = [o.strip() for o in lines if re.search('func test', o)]
+names = [re.search(r'func (test\w*)\(', o).group(1) for o in tests]
+types = ('Float', 'Double')
+}%
+
+% for t in types:
+extension SwiftyMKLTests${t} {
+  static var allTests : [(String, (SwiftyMKLTests${t})->()->())] {
+    return [
+  % for n in names:
+      ("${n}", ${n}),
+  % end # n
+    ]
+  }
+}
+% end # t
+
+XCTMain([
+% for t in types:
+    testCase(SwiftyMKLTests${t}.allTests),
+% end # t
+])
+
