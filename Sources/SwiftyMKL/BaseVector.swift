@@ -1,4 +1,5 @@
 public protocol BaseVector: ArrayProtocol where Storage==AlignedStorage<Element>, Index==Int {
+  // TODO why do we have to redeclare this?
   associatedtype Element
 
   var data:Storage {get set}

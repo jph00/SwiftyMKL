@@ -12,6 +12,7 @@ extension Array:                      Subscriptable {}
 extension UnsafeMutableBufferPointer: Subscriptable {}
 
 public protocol ArrayProtocol:
+    // TODO why does compile fail if we remove MutableCollection?
     RandomAccessCollection, MutableCollection, ExpressibleByArrayLiteral, Equatable, CustomStringConvertible, Subscriptable
     where Element:Equatable, Element==Storage.Element {
   associatedtype Storage: Subscriptable
