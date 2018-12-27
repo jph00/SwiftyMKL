@@ -10,8 +10,10 @@ public func defaultValue<T>() -> T {
 }
 
 
-public protocol Vector: BaseVector where Element: SignedNumeric {
+public protocol Vector: BaseVector where Element: SupportsMKL {
   func asum()->Element
+  func nrm2()->Element
+  func dot(_ b:Self)->Element
 
   func ln(_ dest: Self)
   func ln_()
@@ -147,6 +149,10 @@ public protocol Vector: BaseVector where Element: SignedNumeric {
   func atan2_(_ b:Self)
   func atan2(_ b:Self)->Self
 
+  func powx(_ b:Element, _ dest:Self)
+  func powx_(_ b:Element)
+  func powx(_ b:Element)->Self
+
   func add(_ b:Element, _ dest:Self)
   func add_(_ b:Element)
   func add(_ b:Element)->Self
@@ -196,6 +202,7 @@ extension Vector {
 extension Vector where Element==Float {
   public func asum()->Element { return cblas_sasum(c, p, 1) }
   public func nrm2()->Element { return cblas_snrm2(c, p, 1) }
+  public func dot(_ b:Self)->Element { return cblas_sdot(c, p, 1, b.p, 1) }
 
     public func ln(_ dest: Self) { vsLn(c, p, dest.p) }
     public func ln_() { ln(self) }
@@ -331,6 +338,10 @@ extension Vector where Element==Float {
     public func atan2_(_ b:Self) { atan2(b, self) }
     public func atan2(_ b:Self)->Self { return new_call(atan2, b) }
 
+    public func powx(_ b:Element, _ dest:Self) { vsPowx(c, p, b, dest.p) }
+    public func powx_(_ b:Element) { powx(b, self) }
+    public func powx(_ b:Element)->Self { return new_call(powx, b) }
+
     public func add(_ b:Element, _ dest:Self) { ippsAddC_32f(p, b, dest.p, c) }
     public func add_(_ b:Element) { add(b, self) }
     public func add(_ b:Element)->Self { return new_call(add, b) }
@@ -371,6 +382,7 @@ public struct VectorFloat: Vector {
 extension Vector where Element==Double {
   public func asum()->Element { return cblas_dasum(c, p, 1) }
   public func nrm2()->Element { return cblas_dnrm2(c, p, 1) }
+  public func dot(_ b:Self)->Element { return cblas_ddot(c, p, 1, b.p, 1) }
 
     public func ln(_ dest: Self) { vdLn(c, p, dest.p) }
     public func ln_() { ln(self) }
@@ -505,6 +517,10 @@ extension Vector where Element==Double {
     public func atan2(_ b:Self, _ dest:Self) { vdAtan2(c, p, b.p, dest.p) }
     public func atan2_(_ b:Self) { atan2(b, self) }
     public func atan2(_ b:Self)->Self { return new_call(atan2, b) }
+
+    public func powx(_ b:Element, _ dest:Self) { vdPowx(c, p, b, dest.p) }
+    public func powx_(_ b:Element) { powx(b, self) }
+    public func powx(_ b:Element)->Self { return new_call(powx, b) }
 
     public func add(_ b:Element, _ dest:Self) { ippsAddC_64f(p, b, dest.p, c) }
     public func add_(_ b:Element) { add(b, self) }

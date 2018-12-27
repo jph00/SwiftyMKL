@@ -42,5 +42,9 @@ extension BaseVector where Element:Equatable {
   func new_call(_ f:(Self)         ->()             )->Self { let res = new(); f(res);    return res }
   func new_call(_ f:(Self, Self)   ->(), _ b:Self   )->Self { let res = new(); f(b, res); return res }
   func new_call(_ f:(Element, Self)->(), _ b:Element)->Self { let res = new(); f(b, res); return res }
+
+  /*func map<T>(_ transform: (Element)->(T)) -> [T] {
+    return data.map(transform)
+  }*/
 }
 

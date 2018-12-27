@@ -22,8 +22,10 @@ vml2 = lower_split("Add Sub Mul Div Pow Hypot Atan2")
 ipp2 = lower_split("Add Sub Mul Div")
 }%
 
-public protocol Vector: BaseVector where Element: SignedNumeric {
+public protocol Vector: BaseVector where Element: SupportsMKL {
   func asum()->Element
+  func nrm2()->Element
+  func dot(_ b:Self)->Element
 
 % for u,o in vml1:
   func ${o}(_ dest: Self)
@@ -40,6 +42,10 @@ public protocol Vector: BaseVector where Element: SignedNumeric {
   func ${o}_(_ b:Self)
   func ${o}(_ b:Self)->Self
 % end # ipp1
+
+  func powx(_ b:Element, _ dest:Self)
+  func powx_(_ b:Element)
+  func powx(_ b:Element)->Self
 
 % for u,o in ipp2:
   func ${o}(_ b:Element, _ dest:Self)
@@ -84,6 +90,7 @@ extension Vector {
 extension Vector where Element==${t} {
   public func asum()->Element { return cblas_${l}asum(c, p, 1) }
   public func nrm2()->Element { return cblas_${l}nrm2(c, p, 1) }
+  public func dot(_ b:Self)->Element { return cblas_${l}dot(c, p, 1, b.p, 1) }
 
   % for u,o in vml1:
     public func ${o}(_ dest: Self) { v${l}${u}(c, p, dest.p) }
@@ -100,6 +107,10 @@ extension Vector where Element==${t} {
     public func ${o}_(_ b:Self) { ${o}(b, self) }
     public func ${o}(_ b:Self)->Self { return new_call(${o}, b) }
   % end # vml2
+
+    public func powx(_ b:Element, _ dest:Self) { v${l}Powx(c, p, b, dest.p) }
+    public func powx_(_ b:Element) { powx(b, self) }
+    public func powx(_ b:Element)->Self { return new_call(powx, b) }
 
   % for u,o in ipp2:
     public func ${o}(_ b:Element, _ dest:Self) { ipps${u}C_${n}f(p, b, dest.p, c) }

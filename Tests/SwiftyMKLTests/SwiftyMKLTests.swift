@@ -10,6 +10,7 @@ protocol TestProtocol where T:Vector {
   var two :T.Element {get}
 }
 
+
 class SwiftyMKLTestsFloat:  XCTestCase, TestProtocol {
   override class func setUp() {
     super.setUp()
@@ -33,7 +34,7 @@ class SwiftyMKLTestsDouble:  XCTestCase, TestProtocol {
   let v2:VectorDouble = [0.5, 12, -2]
 }
 
-extension TestProtocol where T.Element:FloatingPoint {
+extension TestProtocol where T.Element:SupportsMKL {
   func testVersion() {
     XCTAssertNotNil(MKL.get_version_string().range(of:"Intel"))
     XCTAssertGreaterThan(IPP.getLibVersion().major, 2012, "IPP Version too old or missing")
@@ -42,6 +43,17 @@ extension TestProtocol where T.Element:FloatingPoint {
   func testASum() {
     let exp = v1.reduce(zero) {$0 + abs($1)}
     XCTAssertEqual(v1.asum(), exp)
+  }
+
+  func testSum() {
+    let exp = v1.reduce(zero, +)
+    XCTAssertEqual(v1.sum(), exp)
+  }
+
+  func testDot() {
+    let exp = zip(v1,v2).map(*).reduce(zero, +)
+    let r1 = v1.dot(v2)
+    XCTAssertEqual(r1, exp)
   }
 
   func testAbs() {
@@ -87,6 +99,29 @@ extension TestProtocol where T.Element:FloatingPoint {
     let r5 = v1.copy()
     r5 /= two
     XCTAssertEqual(r5, exp)
+  }
+
+
+  func testPowx() {
+    let exp = T(v1.map {$0 ^^ two})
+    let r1 = v1.powx(two)
+    XCTAssertEqual(r1, exp)
+    let r2 = v1.copy()
+    v1.powx(two, r2)
+    XCTAssertEqual(r2, exp)
+    v1.powx_(two)
+    XCTAssertEqual(v1, exp)
+  }
+
+  func testPow() {
+    let exp = T(zip(v1,v2).map(^^))
+    let r1 = v1.pow(v2)
+    XCTAssertEqual(r1, exp)
+    let r2 = v1.copy()
+    v1.pow(v2, r2)
+    XCTAssertEqual(r2, exp)
+    v1.pow_(v2)
+    XCTAssertEqual(v1, exp)
   }
 
 }

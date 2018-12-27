@@ -7,9 +7,13 @@ extension SwiftyMKLTestsFloat {
     return [
       ("testVersion", testVersion),
       ("testASum", testASum),
+      ("testSum", testSum),
+      ("testDot", testDot),
       ("testAbs", testAbs),
       ("testAdd", testAdd),
       ("testDivC", testDivC),
+      ("testPowx", testPowx),
+      ("testPow", testPow),
     ]
   }
 }
@@ -18,9 +22,13 @@ extension SwiftyMKLTestsDouble {
     return [
       ("testVersion", testVersion),
       ("testASum", testASum),
+      ("testSum", testSum),
+      ("testDot", testDot),
       ("testAbs", testAbs),
       ("testAdd", testAdd),
       ("testDivC", testDivC),
+      ("testPowx", testPowx),
+      ("testPow", testPow),
     ]
   }
 }
