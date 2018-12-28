@@ -14,6 +14,7 @@ extension SwiftyMKLTestsFloat {
       ("testDivC", testDivC),
       ("testPowx", testPowx),
       ("testPow", testPow),
+      ("testNormDiff_Inf", testNormDiff_Inf),
     ]
   }
 }
@@ -29,6 +30,7 @@ extension SwiftyMKLTestsDouble {
       ("testDivC", testDivC),
       ("testPowx", testPowx),
       ("testPow", testPow),
+      ("testNormDiff_Inf", testNormDiff_Inf),
     ]
   }
 }

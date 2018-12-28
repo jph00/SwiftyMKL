@@ -10,11 +10,11 @@ public func defaultValue<T>() -> T {
 }
 
 
-public protocol Vector: BaseVector where Element: SupportsMKL {
-  func asum()->Element
-  func nrm2()->Element
-  func dot(_ b:Self)->Element
-
+public protocol Vector: BaseVector where Storage==ArrayStorage<Scalar> {
+  var p:MutPtrT {get}
+  func asum()->Scalar
+  func nrm2()->Scalar
+  func dot(_ b:Self)->Scalar
   func ln(_ dest: Self)
   func ln_()
   func ln()->Self
@@ -121,11 +121,11 @@ public protocol Vector: BaseVector where Element: SupportsMKL {
   func nearbyInt_()
   func nearbyInt()->Self
 
-  func sum()->Element
-  func mean()->Element
-  func stdDev()->Element
-  func max()->Element
-  func min()->Element
+  func sum()->Scalar
+  func mean()->Scalar
+  func stdDev()->Scalar
+  func max()->Scalar
+  func min()->Scalar
 
   func add(_ b:Self, _ dest:Self)
   func add_(_ b:Self)
@@ -149,60 +149,86 @@ public protocol Vector: BaseVector where Element: SupportsMKL {
   func atan2_(_ b:Self)
   func atan2(_ b:Self)->Self
 
-  func powx(_ b:Element, _ dest:Self)
-  func powx_(_ b:Element)
-  func powx(_ b:Element)->Self
+  func powx(_ b:Scalar, _ dest:Self)
+  func powx_(_ b:Scalar)
+  func powx(_ b:Scalar)->Self
 
-  func add(_ b:Element, _ dest:Self)
-  func add_(_ b:Element)
-  func add(_ b:Element)->Self
-  func sub(_ b:Element, _ dest:Self)
-  func sub_(_ b:Element)
-  func sub(_ b:Element)->Self
-  func mul(_ b:Element, _ dest:Self)
-  func mul_(_ b:Element)
-  func mul(_ b:Element)->Self
-  func div(_ b:Element, _ dest:Self)
-  func div_(_ b:Element)
-  func div(_ b:Element)->Self
+  func add(_ b:Scalar, _ dest:Self)
+  func add_(_ b:Scalar)
+  func add(_ b:Scalar)->Self
+  func sub(_ b:Scalar, _ dest:Self)
+  func sub_(_ b:Scalar)
+  func sub(_ b:Scalar)->Self
+  func mul(_ b:Scalar, _ dest:Self)
+  func mul_(_ b:Scalar)
+  func mul(_ b:Scalar)->Self
+  func div(_ b:Scalar, _ dest:Self)
+  func div_(_ b:Scalar)
+  func div(_ b:Scalar)->Self
 
-  static func + (lhs:Self, rhs:Self) -> Self 
-  static func - (lhs:Self, rhs:Self) -> Self 
-  static func * (lhs:Self, rhs:Self) -> Self 
-  static func / (lhs:Self, rhs:Self) -> Self 
-  static func + (lhs:Self, rhs:Element) -> Self 
-  static func + (lhs:Element, rhs:Self) -> Self 
-  static func - (lhs:Self, rhs:Element) -> Self 
-  static func * (lhs:Self, rhs:Element) -> Self 
-  static func * (lhs:Element, rhs:Self) -> Self 
-  static func / (lhs:Self, rhs:Element) -> Self 
+  func normDiff_Inf(_ b:Self)->Scalar
+  func normDiff_L1(_ b:Self)->Scalar
+  func normDiff_L2(_ b:Self)->Scalar
+
+  static func +  (lhs:Self, rhs:Self  ) -> Self 
+  static func +  (lhs:Self, rhs:Scalar) -> Self 
   static func += (lhs:Self, rhs:Self) 
+  static func += (lhs:Self, rhs:Scalar)
+  static func -  (lhs:Self, rhs:Self  ) -> Self 
+  static func -  (lhs:Self, rhs:Scalar) -> Self 
   static func -= (lhs:Self, rhs:Self) 
+  static func -= (lhs:Self, rhs:Scalar)
+  static func *  (lhs:Self, rhs:Self  ) -> Self 
+  static func *  (lhs:Self, rhs:Scalar) -> Self 
   static func *= (lhs:Self, rhs:Self) 
+  static func *= (lhs:Self, rhs:Scalar)
+  static func /  (lhs:Self, rhs:Self  ) -> Self 
+  static func /  (lhs:Self, rhs:Scalar) -> Self 
   static func /= (lhs:Self, rhs:Self) 
-  static func += (lhs:Self, rhs:Element) 
-  static func -= (lhs:Self, rhs:Element) 
-  static func *= (lhs:Self, rhs:Element) 
-  static func /= (lhs:Self, rhs:Element) 
+  static func /= (lhs:Self, rhs:Scalar)
+  static func + (lhs:Scalar, rhs:Self) -> Self 
+  static func * (lhs:Scalar, rhs:Self) -> Self 
 }
 
 extension Vector {
-  public var descriptionPrefix:String {return "V"}
+  public var p:MutPtrT {get {return data.p}}
+  public var description: String { return "V\(Array(data).description)" }
+  public init(_ data:Array<Scalar>) {self.init(ArrayStorage<Scalar>(data))}
+  public init(_ count:Int) {self.init(ArrayStorage<Scalar>(count))}
+  public var alignment:Int {return data.alignment}
 
   // IPP convenience functions
   typealias ippFuncReduceHint = (PtrT,Int32,MutPtrT,IppHintAlgorithm)->IppStatus
   typealias ippFuncReduce = (PtrT,Int32,MutPtrT)->IppStatus
-  func ipp_reduce(_ f:(MutPtrT)->IppStatus)->Element {
-    var res:Element=defaultValue(); let _=f(&res); return res
+  func ipp_reduce(_ f:(MutPtrT)->IppStatus)->Scalar {
+    var res:Scalar=defaultValue(); let _=f(&res); return res
   }
-  func ipp_reduce(_ f:ippFuncReduceHint)->Element { return ipp_reduce({f(p, c, $0, ippAlgHintFast)}) }
-  func ipp_reduce(_ f:ippFuncReduce    )->Element { return ipp_reduce({f(p, c, $0)}) }
+  func ipp_reduce(_ f:ippFuncReduceHint)->Scalar { return ipp_reduce({f(p, c, $0, ippAlgHintFast)}) }
+  func ipp_reduce(_ f:ippFuncReduce    )->Scalar { return ipp_reduce({f(p, c, $0)}) }
+
+  public func new()  -> Self { return Self.init(ArrayStorage<Scalar>(data.count,  alignment:alignment)) }
+  public func copy() -> Self { return Self.init(ArrayStorage<Scalar>(Array(data), alignment:alignment)) }
+
+  func new_call(_ f:(Self)         ->()            )->Self { let res = new(); f(res);    return res }
+  func new_call(_ f:(Self, Self)   ->(), _ b:Self  )->Self { let res = new(); f(b, res); return res }
+  func new_call(_ f:(Scalar, Self)->(),  _ b:Scalar)->Self { let res = new(); f(b, res); return res }
 }
 
-extension Vector where Element==Float {
-  public func asum()->Element { return cblas_sasum(c, p, 1) }
-  public func nrm2()->Element { return cblas_snrm2(c, p, 1) }
-  public func dot(_ b:Self)->Element { return cblas_sdot(c, p, 1, b.p, 1) }
+public struct VectorFloat: Vector {
+  public typealias Scalar=Float
+  public var data:ArrayStorage<Float>
+  public init(_ data_:ArrayStorage<Float>) {data=data_}
+}
+public struct VectorDouble: Vector {
+  public typealias Scalar=Double
+  public var data:ArrayStorage<Double>
+  public init(_ data_:ArrayStorage<Double>) {data=data_}
+}
+
+extension Vector where Scalar==Float {
+  public func asum()->Scalar { return cblas_sasum(c, p, 1) }
+  public func nrm2()->Scalar { return cblas_snrm2(c, p, 1) }
+  public func dot(_ b:Self)->Scalar { return cblas_sdot(c, p, 1, b.p, 1) }
 
     public func ln(_ dest: Self) { vsLn(c, p, dest.p) }
     public func ln_() { ln(self) }
@@ -310,79 +336,78 @@ extension Vector where Element==Float {
     public func nearbyInt_() { nearbyInt(self) }
     public func nearbyInt() -> Self  { return new_call(nearbyInt) }
 
-    public func sum()->Element { return ipp_reduce(ippsSum_32f) }
-    public func mean()->Element { return ipp_reduce(ippsMean_32f) }
-    public func stdDev()->Element { return ipp_reduce(ippsStdDev_32f) }
-    public func max()->Element { return ipp_reduce(ippsMax_32f) }
-    public func min()->Element { return ipp_reduce(ippsMin_32f) }
+    public func sum()->Scalar { return ipp_reduce(ippsSum_32f) }
+    public func mean()->Scalar { return ipp_reduce(ippsMean_32f) }
+    public func stdDev()->Scalar { return ipp_reduce(ippsStdDev_32f) }
+    public func max()->Scalar { return ipp_reduce(ippsMax_32f) }
+    public func min()->Scalar { return ipp_reduce(ippsMin_32f) }
 
-    public func add(_ b:Self, _ dest:Self) { vsAdd(c, p, b.p, dest.p) }
-    public func add_(_ b:Self) { add(b, self) }
-    public func add(_ b:Self)->Self { return new_call(add, b) }
-    public func sub(_ b:Self, _ dest:Self) { vsSub(c, p, b.p, dest.p) }
-    public func sub_(_ b:Self) { sub(b, self) }
-    public func sub(_ b:Self)->Self { return new_call(sub, b) }
-    public func mul(_ b:Self, _ dest:Self) { vsMul(c, p, b.p, dest.p) }
-    public func mul_(_ b:Self) { mul(b, self) }
-    public func mul(_ b:Self)->Self { return new_call(mul, b) }
-    public func div(_ b:Self, _ dest:Self) { vsDiv(c, p, b.p, dest.p) }
-    public func div_(_ b:Self) { div(b, self) }
-    public func div(_ b:Self)->Self { return new_call(div, b) }
-    public func pow(_ b:Self, _ dest:Self) { vsPow(c, p, b.p, dest.p) }
-    public func pow_(_ b:Self) { pow(b, self) }
-    public func pow(_ b:Self)->Self { return new_call(pow, b) }
-    public func hypot(_ b:Self, _ dest:Self) { vsHypot(c, p, b.p, dest.p) }
-    public func hypot_(_ b:Self) { hypot(b, self) }
-    public func hypot(_ b:Self)->Self { return new_call(hypot, b) }
-    public func atan2(_ b:Self, _ dest:Self) { vsAtan2(c, p, b.p, dest.p) }
-    public func atan2_(_ b:Self) { atan2(b, self) }
-    public func atan2(_ b:Self)->Self { return new_call(atan2, b) }
+  public func add(_ b:Self, _ dest:Self) { vsAdd(c, p, b.p, dest.p) }
+  public func add_(_ b:Self) { add(b, self) }
+  public func add(_ b:Self)->Self { return new_call(add, b) }
+  public func sub(_ b:Self, _ dest:Self) { vsSub(c, p, b.p, dest.p) }
+  public func sub_(_ b:Self) { sub(b, self) }
+  public func sub(_ b:Self)->Self { return new_call(sub, b) }
+  public func mul(_ b:Self, _ dest:Self) { vsMul(c, p, b.p, dest.p) }
+  public func mul_(_ b:Self) { mul(b, self) }
+  public func mul(_ b:Self)->Self { return new_call(mul, b) }
+  public func div(_ b:Self, _ dest:Self) { vsDiv(c, p, b.p, dest.p) }
+  public func div_(_ b:Self) { div(b, self) }
+  public func div(_ b:Self)->Self { return new_call(div, b) }
+  public func pow(_ b:Self, _ dest:Self) { vsPow(c, p, b.p, dest.p) }
+  public func pow_(_ b:Self) { pow(b, self) }
+  public func pow(_ b:Self)->Self { return new_call(pow, b) }
+  public func hypot(_ b:Self, _ dest:Self) { vsHypot(c, p, b.p, dest.p) }
+  public func hypot_(_ b:Self) { hypot(b, self) }
+  public func hypot(_ b:Self)->Self { return new_call(hypot, b) }
+  public func atan2(_ b:Self, _ dest:Self) { vsAtan2(c, p, b.p, dest.p) }
+  public func atan2_(_ b:Self) { atan2(b, self) }
+  public func atan2(_ b:Self)->Self { return new_call(atan2, b) }
 
-    public func powx(_ b:Element, _ dest:Self) { vsPowx(c, p, b, dest.p) }
-    public func powx_(_ b:Element) { powx(b, self) }
-    public func powx(_ b:Element)->Self { return new_call(powx, b) }
+  public func powx(_ b:Scalar, _ dest:Self) { vsPowx(c, p, b, dest.p) }
+  public func powx_(_ b:Scalar) { powx(b, self) }
+  public func powx(_ b:Scalar)->Self { return new_call(powx, b) }
 
-    public func add(_ b:Element, _ dest:Self) { ippsAddC_32f(p, b, dest.p, c) }
-    public func add_(_ b:Element) { add(b, self) }
-    public func add(_ b:Element)->Self { return new_call(add, b) }
-    public func sub(_ b:Element, _ dest:Self) { ippsSubC_32f(p, b, dest.p, c) }
-    public func sub_(_ b:Element) { sub(b, self) }
-    public func sub(_ b:Element)->Self { return new_call(sub, b) }
-    public func mul(_ b:Element, _ dest:Self) { ippsMulC_32f(p, b, dest.p, c) }
-    public func mul_(_ b:Element) { mul(b, self) }
-    public func mul(_ b:Element)->Self { return new_call(mul, b) }
-    public func div(_ b:Element, _ dest:Self) { ippsDivC_32f(p, b, dest.p, c) }
-    public func div_(_ b:Element) { div(b, self) }
-    public func div(_ b:Element)->Self { return new_call(div, b) }
+  public func add(_ b:Scalar, _ dest:Self) { ippsAddC_32f(p, b, dest.p, c) }
+  public func add_(_ b:Scalar) { add(b, self) }
+  public func add(_ b:Scalar)->Self { return new_call(add, b) }
+  public func sub(_ b:Scalar, _ dest:Self) { ippsSubC_32f(p, b, dest.p, c) }
+  public func sub_(_ b:Scalar) { sub(b, self) }
+  public func sub(_ b:Scalar)->Self { return new_call(sub, b) }
+  public func mul(_ b:Scalar, _ dest:Self) { ippsMulC_32f(p, b, dest.p, c) }
+  public func mul_(_ b:Scalar) { mul(b, self) }
+  public func mul(_ b:Scalar)->Self { return new_call(mul, b) }
+  public func div(_ b:Scalar, _ dest:Self) { ippsDivC_32f(p, b, dest.p, c) }
+  public func div_(_ b:Scalar) { div(b, self) }
+  public func div(_ b:Scalar)->Self { return new_call(div, b) }
 
-  public static func + (lhs:Self, rhs:Self) -> Self { return lhs.add(rhs) }
-  public static func - (lhs:Self, rhs:Self) -> Self { return lhs.sub(rhs) }
-  public static func * (lhs:Self, rhs:Self) -> Self { return lhs.mul(rhs) }
-  public static func / (lhs:Self, rhs:Self) -> Self { return lhs.div(rhs) }
-  public static func + (lhs:Self, rhs:Element) -> Self { return lhs.add(rhs) }
-  public static func + (lhs:Element, rhs:Self) -> Self { return rhs.add(lhs) }
-  public static func - (lhs:Self, rhs:Element) -> Self { return lhs.sub(rhs) }
-  public static func * (lhs:Self, rhs:Element) -> Self { return lhs.mul(rhs) }
-  public static func * (lhs:Element, rhs:Self) -> Self { return rhs.mul(lhs) }
-  public static func / (lhs:Self, rhs:Element) -> Self { return lhs.div(rhs) }
-  public static func += (lhs:Self, rhs:Self) { lhs.add_(rhs) }
-  public static func -= (lhs:Self, rhs:Self) { lhs.sub_(rhs) }
-  public static func *= (lhs:Self, rhs:Self) { lhs.mul_(rhs) }
-  public static func /= (lhs:Self, rhs:Self) { lhs.div_(rhs) }
-  public static func += (lhs:Self, rhs:Element) { lhs.add_(rhs) }
-  public static func -= (lhs:Self, rhs:Element) { lhs.sub_(rhs) }
-  public static func *= (lhs:Self, rhs:Element) { lhs.mul_(rhs) }
-  public static func /= (lhs:Self, rhs:Element) { lhs.div_(rhs) }
+  public func normDiff_Inf(_ b:Self)->Scalar {return ipp_reduce({ippsNormDiff_Inf_32f(p, b.p, c, $0)})}
+  public func normDiff_L1(_ b:Self)->Scalar {return ipp_reduce({ippsNormDiff_L1_32f(p, b.p, c, $0)})}
+  public func normDiff_L2(_ b:Self)->Scalar {return ipp_reduce({ippsNormDiff_L2_32f(p, b.p, c, $0)})}
+
+  public static func +  (lhs:Self, rhs:Self  ) -> Self { return lhs.add( rhs) }
+  public static func +  (lhs:Self, rhs:Scalar) -> Self { return lhs.add( rhs) }
+  public static func += (lhs:Self, rhs:Self  )         { return lhs.add_(rhs) }
+  public static func += (lhs:Self, rhs:Scalar)         { return lhs.add_(rhs) }
+  public static func -  (lhs:Self, rhs:Self  ) -> Self { return lhs.sub( rhs) }
+  public static func -  (lhs:Self, rhs:Scalar) -> Self { return lhs.sub( rhs) }
+  public static func -= (lhs:Self, rhs:Self  )         { return lhs.sub_(rhs) }
+  public static func -= (lhs:Self, rhs:Scalar)         { return lhs.sub_(rhs) }
+  public static func *  (lhs:Self, rhs:Self  ) -> Self { return lhs.mul( rhs) }
+  public static func *  (lhs:Self, rhs:Scalar) -> Self { return lhs.mul( rhs) }
+  public static func *= (lhs:Self, rhs:Self  )         { return lhs.mul_(rhs) }
+  public static func *= (lhs:Self, rhs:Scalar)         { return lhs.mul_(rhs) }
+  public static func /  (lhs:Self, rhs:Self  ) -> Self { return lhs.div( rhs) }
+  public static func /  (lhs:Self, rhs:Scalar) -> Self { return lhs.div( rhs) }
+  public static func /= (lhs:Self, rhs:Self  )         { return lhs.div_(rhs) }
+  public static func /= (lhs:Self, rhs:Scalar)         { return lhs.div_(rhs) }
+  public static func + (lhs:Scalar, rhs:Self) -> Self { return rhs.add(lhs) }
+  public static func * (lhs:Scalar, rhs:Self) -> Self { return rhs.mul(lhs) }
 }
-
-public struct VectorFloat: Vector {
-  public var data:AlignedStorage<Float>
-  public init(_ data_:AlignedStorage<Float>) {data=data_}
-}
-extension Vector where Element==Double {
-  public func asum()->Element { return cblas_dasum(c, p, 1) }
-  public func nrm2()->Element { return cblas_dnrm2(c, p, 1) }
-  public func dot(_ b:Self)->Element { return cblas_ddot(c, p, 1, b.p, 1) }
+extension Vector where Scalar==Double {
+  public func asum()->Scalar { return cblas_dasum(c, p, 1) }
+  public func nrm2()->Scalar { return cblas_dnrm2(c, p, 1) }
+  public func dot(_ b:Self)->Scalar { return cblas_ddot(c, p, 1, b.p, 1) }
 
     public func ln(_ dest: Self) { vdLn(c, p, dest.p) }
     public func ln_() { ln(self) }
@@ -490,73 +515,72 @@ extension Vector where Element==Double {
     public func nearbyInt_() { nearbyInt(self) }
     public func nearbyInt() -> Self  { return new_call(nearbyInt) }
 
-    public func sum()->Element { return ipp_reduce(ippsSum_64f) }
-    public func mean()->Element { return ipp_reduce(ippsMean_64f) }
-    public func stdDev()->Element { return ipp_reduce(ippsStdDev_64f) }
-    public func max()->Element { return ipp_reduce(ippsMax_64f) }
-    public func min()->Element { return ipp_reduce(ippsMin_64f) }
+    public func sum()->Scalar { return ipp_reduce(ippsSum_64f) }
+    public func mean()->Scalar { return ipp_reduce(ippsMean_64f) }
+    public func stdDev()->Scalar { return ipp_reduce(ippsStdDev_64f) }
+    public func max()->Scalar { return ipp_reduce(ippsMax_64f) }
+    public func min()->Scalar { return ipp_reduce(ippsMin_64f) }
 
-    public func add(_ b:Self, _ dest:Self) { vdAdd(c, p, b.p, dest.p) }
-    public func add_(_ b:Self) { add(b, self) }
-    public func add(_ b:Self)->Self { return new_call(add, b) }
-    public func sub(_ b:Self, _ dest:Self) { vdSub(c, p, b.p, dest.p) }
-    public func sub_(_ b:Self) { sub(b, self) }
-    public func sub(_ b:Self)->Self { return new_call(sub, b) }
-    public func mul(_ b:Self, _ dest:Self) { vdMul(c, p, b.p, dest.p) }
-    public func mul_(_ b:Self) { mul(b, self) }
-    public func mul(_ b:Self)->Self { return new_call(mul, b) }
-    public func div(_ b:Self, _ dest:Self) { vdDiv(c, p, b.p, dest.p) }
-    public func div_(_ b:Self) { div(b, self) }
-    public func div(_ b:Self)->Self { return new_call(div, b) }
-    public func pow(_ b:Self, _ dest:Self) { vdPow(c, p, b.p, dest.p) }
-    public func pow_(_ b:Self) { pow(b, self) }
-    public func pow(_ b:Self)->Self { return new_call(pow, b) }
-    public func hypot(_ b:Self, _ dest:Self) { vdHypot(c, p, b.p, dest.p) }
-    public func hypot_(_ b:Self) { hypot(b, self) }
-    public func hypot(_ b:Self)->Self { return new_call(hypot, b) }
-    public func atan2(_ b:Self, _ dest:Self) { vdAtan2(c, p, b.p, dest.p) }
-    public func atan2_(_ b:Self) { atan2(b, self) }
-    public func atan2(_ b:Self)->Self { return new_call(atan2, b) }
+  public func add(_ b:Self, _ dest:Self) { vdAdd(c, p, b.p, dest.p) }
+  public func add_(_ b:Self) { add(b, self) }
+  public func add(_ b:Self)->Self { return new_call(add, b) }
+  public func sub(_ b:Self, _ dest:Self) { vdSub(c, p, b.p, dest.p) }
+  public func sub_(_ b:Self) { sub(b, self) }
+  public func sub(_ b:Self)->Self { return new_call(sub, b) }
+  public func mul(_ b:Self, _ dest:Self) { vdMul(c, p, b.p, dest.p) }
+  public func mul_(_ b:Self) { mul(b, self) }
+  public func mul(_ b:Self)->Self { return new_call(mul, b) }
+  public func div(_ b:Self, _ dest:Self) { vdDiv(c, p, b.p, dest.p) }
+  public func div_(_ b:Self) { div(b, self) }
+  public func div(_ b:Self)->Self { return new_call(div, b) }
+  public func pow(_ b:Self, _ dest:Self) { vdPow(c, p, b.p, dest.p) }
+  public func pow_(_ b:Self) { pow(b, self) }
+  public func pow(_ b:Self)->Self { return new_call(pow, b) }
+  public func hypot(_ b:Self, _ dest:Self) { vdHypot(c, p, b.p, dest.p) }
+  public func hypot_(_ b:Self) { hypot(b, self) }
+  public func hypot(_ b:Self)->Self { return new_call(hypot, b) }
+  public func atan2(_ b:Self, _ dest:Self) { vdAtan2(c, p, b.p, dest.p) }
+  public func atan2_(_ b:Self) { atan2(b, self) }
+  public func atan2(_ b:Self)->Self { return new_call(atan2, b) }
 
-    public func powx(_ b:Element, _ dest:Self) { vdPowx(c, p, b, dest.p) }
-    public func powx_(_ b:Element) { powx(b, self) }
-    public func powx(_ b:Element)->Self { return new_call(powx, b) }
+  public func powx(_ b:Scalar, _ dest:Self) { vdPowx(c, p, b, dest.p) }
+  public func powx_(_ b:Scalar) { powx(b, self) }
+  public func powx(_ b:Scalar)->Self { return new_call(powx, b) }
 
-    public func add(_ b:Element, _ dest:Self) { ippsAddC_64f(p, b, dest.p, c) }
-    public func add_(_ b:Element) { add(b, self) }
-    public func add(_ b:Element)->Self { return new_call(add, b) }
-    public func sub(_ b:Element, _ dest:Self) { ippsSubC_64f(p, b, dest.p, c) }
-    public func sub_(_ b:Element) { sub(b, self) }
-    public func sub(_ b:Element)->Self { return new_call(sub, b) }
-    public func mul(_ b:Element, _ dest:Self) { ippsMulC_64f(p, b, dest.p, c) }
-    public func mul_(_ b:Element) { mul(b, self) }
-    public func mul(_ b:Element)->Self { return new_call(mul, b) }
-    public func div(_ b:Element, _ dest:Self) { ippsDivC_64f(p, b, dest.p, c) }
-    public func div_(_ b:Element) { div(b, self) }
-    public func div(_ b:Element)->Self { return new_call(div, b) }
+  public func add(_ b:Scalar, _ dest:Self) { ippsAddC_64f(p, b, dest.p, c) }
+  public func add_(_ b:Scalar) { add(b, self) }
+  public func add(_ b:Scalar)->Self { return new_call(add, b) }
+  public func sub(_ b:Scalar, _ dest:Self) { ippsSubC_64f(p, b, dest.p, c) }
+  public func sub_(_ b:Scalar) { sub(b, self) }
+  public func sub(_ b:Scalar)->Self { return new_call(sub, b) }
+  public func mul(_ b:Scalar, _ dest:Self) { ippsMulC_64f(p, b, dest.p, c) }
+  public func mul_(_ b:Scalar) { mul(b, self) }
+  public func mul(_ b:Scalar)->Self { return new_call(mul, b) }
+  public func div(_ b:Scalar, _ dest:Self) { ippsDivC_64f(p, b, dest.p, c) }
+  public func div_(_ b:Scalar) { div(b, self) }
+  public func div(_ b:Scalar)->Self { return new_call(div, b) }
 
-  public static func + (lhs:Self, rhs:Self) -> Self { return lhs.add(rhs) }
-  public static func - (lhs:Self, rhs:Self) -> Self { return lhs.sub(rhs) }
-  public static func * (lhs:Self, rhs:Self) -> Self { return lhs.mul(rhs) }
-  public static func / (lhs:Self, rhs:Self) -> Self { return lhs.div(rhs) }
-  public static func + (lhs:Self, rhs:Element) -> Self { return lhs.add(rhs) }
-  public static func + (lhs:Element, rhs:Self) -> Self { return rhs.add(lhs) }
-  public static func - (lhs:Self, rhs:Element) -> Self { return lhs.sub(rhs) }
-  public static func * (lhs:Self, rhs:Element) -> Self { return lhs.mul(rhs) }
-  public static func * (lhs:Element, rhs:Self) -> Self { return rhs.mul(lhs) }
-  public static func / (lhs:Self, rhs:Element) -> Self { return lhs.div(rhs) }
-  public static func += (lhs:Self, rhs:Self) { lhs.add_(rhs) }
-  public static func -= (lhs:Self, rhs:Self) { lhs.sub_(rhs) }
-  public static func *= (lhs:Self, rhs:Self) { lhs.mul_(rhs) }
-  public static func /= (lhs:Self, rhs:Self) { lhs.div_(rhs) }
-  public static func += (lhs:Self, rhs:Element) { lhs.add_(rhs) }
-  public static func -= (lhs:Self, rhs:Element) { lhs.sub_(rhs) }
-  public static func *= (lhs:Self, rhs:Element) { lhs.mul_(rhs) }
-  public static func /= (lhs:Self, rhs:Element) { lhs.div_(rhs) }
-}
+  public func normDiff_Inf(_ b:Self)->Scalar {return ipp_reduce({ippsNormDiff_Inf_64f(p, b.p, c, $0)})}
+  public func normDiff_L1(_ b:Self)->Scalar {return ipp_reduce({ippsNormDiff_L1_64f(p, b.p, c, $0)})}
+  public func normDiff_L2(_ b:Self)->Scalar {return ipp_reduce({ippsNormDiff_L2_64f(p, b.p, c, $0)})}
 
-public struct VectorDouble: Vector {
-  public var data:AlignedStorage<Double>
-  public init(_ data_:AlignedStorage<Double>) {data=data_}
+  public static func +  (lhs:Self, rhs:Self  ) -> Self { return lhs.add( rhs) }
+  public static func +  (lhs:Self, rhs:Scalar) -> Self { return lhs.add( rhs) }
+  public static func += (lhs:Self, rhs:Self  )         { return lhs.add_(rhs) }
+  public static func += (lhs:Self, rhs:Scalar)         { return lhs.add_(rhs) }
+  public static func -  (lhs:Self, rhs:Self  ) -> Self { return lhs.sub( rhs) }
+  public static func -  (lhs:Self, rhs:Scalar) -> Self { return lhs.sub( rhs) }
+  public static func -= (lhs:Self, rhs:Self  )         { return lhs.sub_(rhs) }
+  public static func -= (lhs:Self, rhs:Scalar)         { return lhs.sub_(rhs) }
+  public static func *  (lhs:Self, rhs:Self  ) -> Self { return lhs.mul( rhs) }
+  public static func *  (lhs:Self, rhs:Scalar) -> Self { return lhs.mul( rhs) }
+  public static func *= (lhs:Self, rhs:Self  )         { return lhs.mul_(rhs) }
+  public static func *= (lhs:Self, rhs:Scalar)         { return lhs.mul_(rhs) }
+  public static func /  (lhs:Self, rhs:Self  ) -> Self { return lhs.div( rhs) }
+  public static func /  (lhs:Self, rhs:Scalar) -> Self { return lhs.div( rhs) }
+  public static func /= (lhs:Self, rhs:Self  )         { return lhs.div_(rhs) }
+  public static func /= (lhs:Self, rhs:Scalar)         { return lhs.div_(rhs) }
+  public static func + (lhs:Scalar, rhs:Self) -> Self { return rhs.add(lhs) }
+  public static func * (lhs:Scalar, rhs:Self) -> Self { return rhs.mul(lhs) }
 }
 

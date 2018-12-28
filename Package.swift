@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "MKL",
+    name: "SwiftyMKL",
     products: [
       .library( name: "SwiftyMKL", type: .static, targets: ["SwiftyMKL"]),
     ],

@@ -18,15 +18,17 @@ vml1 = lower_split("""Ln Abs Inv Sqr Exp Cos Sin Tan Erf Sqrt Cbrt Cosh Sinh Tan
 ipp1 = lower_split("Sum Mean StdDev Max Min")
 # vml (Vector,Vector)->Vector
 vml2 = lower_split("Add Sub Mul Div Pow Hypot Atan2")
-# ipp (Vector,Element)->Vector
+# ipp (Vector,Scalar)->Vector
 ipp2 = lower_split("Add Sub Mul Div")
+# ipp (Vector,Vector)->Scalar
+ipp3 = lower_split("NormDiff_Inf NormDiff_L1 NormDiff_L2")
 }%
 
-public protocol Vector: BaseVector where Element: SupportsMKL {
-  func asum()->Element
-  func nrm2()->Element
-  func dot(_ b:Self)->Element
-
+public protocol Vector: BaseVector where Storage==ArrayStorage<Scalar> {
+  var p:MutPtrT {get}
+  func asum()->Scalar
+  func nrm2()->Scalar
+  func dot(_ b:Self)->Scalar
 % for u,o in vml1:
   func ${o}(_ dest: Self)
   func ${o}_()
@@ -34,7 +36,7 @@ public protocol Vector: BaseVector where Element: SupportsMKL {
 % end
 
 % for u,o in ipp1:
-  func ${o}()->Element
+  func ${o}()->Scalar
 % end # ipp1
 
 % for u,o in vml2:
@@ -43,54 +45,67 @@ public protocol Vector: BaseVector where Element: SupportsMKL {
   func ${o}(_ b:Self)->Self
 % end # ipp1
 
-  func powx(_ b:Element, _ dest:Self)
-  func powx_(_ b:Element)
-  func powx(_ b:Element)->Self
+  func powx(_ b:Scalar, _ dest:Self)
+  func powx_(_ b:Scalar)
+  func powx(_ b:Scalar)->Self
 
 % for u,o in ipp2:
-  func ${o}(_ b:Element, _ dest:Self)
-  func ${o}_(_ b:Element)
-  func ${o}(_ b:Element)->Self
+  func ${o}(_ b:Scalar, _ dest:Self)
+  func ${o}_(_ b:Scalar)
+  func ${o}(_ b:Scalar)->Self
 % end # ipp2
 
-  static func + (lhs:Self, rhs:Self) -> Self 
-  static func - (lhs:Self, rhs:Self) -> Self 
-  static func * (lhs:Self, rhs:Self) -> Self 
-  static func / (lhs:Self, rhs:Self) -> Self 
-  static func + (lhs:Self, rhs:Element) -> Self 
-  static func + (lhs:Element, rhs:Self) -> Self 
-  static func - (lhs:Self, rhs:Element) -> Self 
-  static func * (lhs:Self, rhs:Element) -> Self 
-  static func * (lhs:Element, rhs:Self) -> Self 
-  static func / (lhs:Self, rhs:Element) -> Self 
-  static func += (lhs:Self, rhs:Self) 
-  static func -= (lhs:Self, rhs:Self) 
-  static func *= (lhs:Self, rhs:Self) 
-  static func /= (lhs:Self, rhs:Self) 
-  static func += (lhs:Self, rhs:Element) 
-  static func -= (lhs:Self, rhs:Element) 
-  static func *= (lhs:Self, rhs:Element) 
-  static func /= (lhs:Self, rhs:Element) 
+% for u,o in ipp3:
+  func ${o}(_ b:Self)->Scalar
+% end # ipp3
+
+% for op in '+-*/' :
+  static func ${op}  (lhs:Self, rhs:Self  ) -> Self 
+  static func ${op}  (lhs:Self, rhs:Scalar) -> Self 
+  static func ${op}= (lhs:Self, rhs:Self) 
+  static func ${op}= (lhs:Self, rhs:Scalar)
+% end # op
+  static func + (lhs:Scalar, rhs:Self) -> Self 
+  static func * (lhs:Scalar, rhs:Self) -> Self 
 }
 
 extension Vector {
-  public var descriptionPrefix:String {return "V"}
+  public var p:MutPtrT {get {return data.p}}
+  public var description: String { return "V\(Array(data).description)" }
+  public init(_ data:Array<Scalar>) {self.init(ArrayStorage<Scalar>(data))}
+  public init(_ count:Int) {self.init(ArrayStorage<Scalar>(count))}
+  public var alignment:Int {return data.alignment}
 
   // IPP convenience functions
   typealias ippFuncReduceHint = (PtrT,Int32,MutPtrT,IppHintAlgorithm)->IppStatus
   typealias ippFuncReduce = (PtrT,Int32,MutPtrT)->IppStatus
-  func ipp_reduce(_ f:(MutPtrT)->IppStatus)->Element {
-    var res:Element=defaultValue(); let _=f(&res); return res
+  func ipp_reduce(_ f:(MutPtrT)->IppStatus)->Scalar {
+    var res:Scalar=defaultValue(); let _=f(&res); return res
   }
-  func ipp_reduce(_ f:ippFuncReduceHint)->Element { return ipp_reduce({f(p, c, $0, ippAlgHintFast)}) }
-  func ipp_reduce(_ f:ippFuncReduce    )->Element { return ipp_reduce({f(p, c, $0)}) }
+  func ipp_reduce(_ f:ippFuncReduceHint)->Scalar { return ipp_reduce({f(p, c, $0, ippAlgHintFast)}) }
+  func ipp_reduce(_ f:ippFuncReduce    )->Scalar { return ipp_reduce({f(p, c, $0)}) }
+
+  public func new()  -> Self { return Self.init(ArrayStorage<Scalar>(data.count,  alignment:alignment)) }
+  public func copy() -> Self { return Self.init(ArrayStorage<Scalar>(Array(data), alignment:alignment)) }
+
+  func new_call(_ f:(Self)         ->()            )->Self { let res = new(); f(res);    return res }
+  func new_call(_ f:(Self, Self)   ->(), _ b:Self  )->Self { let res = new(); f(b, res); return res }
+  func new_call(_ f:(Scalar, Self)->(),  _ b:Scalar)->Self { let res = new(); f(b, res); return res }
 }
 
 % for t,l,n in (('Float', 's', '32'), ('Double', 'd', '64')):
-extension Vector where Element==${t} {
-  public func asum()->Element { return cblas_${l}asum(c, p, 1) }
-  public func nrm2()->Element { return cblas_${l}nrm2(c, p, 1) }
-  public func dot(_ b:Self)->Element { return cblas_${l}dot(c, p, 1, b.p, 1) }
+public struct Vector${t}: Vector {
+  public typealias Scalar=${t}
+  public var data:ArrayStorage<${t}>
+  public init(_ data_:ArrayStorage<${t}>) {data=data_}
+}
+% end # for t,l,n
+
+% for t,l,n in (('Float', 's', '32'), ('Double', 'd', '64')):
+extension Vector where Scalar==${t} {
+  public func asum()->Scalar { return cblas_${l}asum(c, p, 1) }
+  public func nrm2()->Scalar { return cblas_${l}nrm2(c, p, 1) }
+  public func dot(_ b:Self)->Scalar { return cblas_${l}dot(c, p, 1, b.p, 1) }
 
   % for u,o in vml1:
     public func ${o}(_ dest: Self) { v${l}${u}(c, p, dest.p) }
@@ -99,48 +114,37 @@ extension Vector where Element==${t} {
   % end # vml1
 
   % for u,o in ipp1:
-    public func ${o}()->Element { return ipp_reduce(ipps${u}_${n}f) }
+    public func ${o}()->Scalar { return ipp_reduce(ipps${u}_${n}f) }
   % end # ipp1
 
   % for u,o in vml2:
-    public func ${o}(_ b:Self, _ dest:Self) { v${l}${u}(c, p, b.p, dest.p) }
-    public func ${o}_(_ b:Self) { ${o}(b, self) }
-    public func ${o}(_ b:Self)->Self { return new_call(${o}, b) }
+  public func ${o}(_ b:Self, _ dest:Self) { v${l}${u}(c, p, b.p, dest.p) }
+  public func ${o}_(_ b:Self) { ${o}(b, self) }
+  public func ${o}(_ b:Self)->Self { return new_call(${o}, b) }
   % end # vml2
 
-    public func powx(_ b:Element, _ dest:Self) { v${l}Powx(c, p, b, dest.p) }
-    public func powx_(_ b:Element) { powx(b, self) }
-    public func powx(_ b:Element)->Self { return new_call(powx, b) }
+  public func powx(_ b:Scalar, _ dest:Self) { v${l}Powx(c, p, b, dest.p) }
+  public func powx_(_ b:Scalar) { powx(b, self) }
+  public func powx(_ b:Scalar)->Self { return new_call(powx, b) }
 
   % for u,o in ipp2:
-    public func ${o}(_ b:Element, _ dest:Self) { ipps${u}C_${n}f(p, b, dest.p, c) }
-    public func ${o}_(_ b:Element) { ${o}(b, self) }
-    public func ${o}(_ b:Element)->Self { return new_call(${o}, b) }
+  public func ${o}(_ b:Scalar, _ dest:Self) { ipps${u}C_${n}f(p, b, dest.p, c) }
+  public func ${o}_(_ b:Scalar) { ${o}(b, self) }
+  public func ${o}(_ b:Scalar)->Self { return new_call(${o}, b) }
   % end # ipp2
 
-  public static func + (lhs:Self, rhs:Self) -> Self { return lhs.add(rhs) }
-  public static func - (lhs:Self, rhs:Self) -> Self { return lhs.sub(rhs) }
-  public static func * (lhs:Self, rhs:Self) -> Self { return lhs.mul(rhs) }
-  public static func / (lhs:Self, rhs:Self) -> Self { return lhs.div(rhs) }
-  public static func + (lhs:Self, rhs:Element) -> Self { return lhs.add(rhs) }
-  public static func + (lhs:Element, rhs:Self) -> Self { return rhs.add(lhs) }
-  public static func - (lhs:Self, rhs:Element) -> Self { return lhs.sub(rhs) }
-  public static func * (lhs:Self, rhs:Element) -> Self { return lhs.mul(rhs) }
-  public static func * (lhs:Element, rhs:Self) -> Self { return rhs.mul(lhs) }
-  public static func / (lhs:Self, rhs:Element) -> Self { return lhs.div(rhs) }
-  public static func += (lhs:Self, rhs:Self) { lhs.add_(rhs) }
-  public static func -= (lhs:Self, rhs:Self) { lhs.sub_(rhs) }
-  public static func *= (lhs:Self, rhs:Self) { lhs.mul_(rhs) }
-  public static func /= (lhs:Self, rhs:Self) { lhs.div_(rhs) }
-  public static func += (lhs:Self, rhs:Element) { lhs.add_(rhs) }
-  public static func -= (lhs:Self, rhs:Element) { lhs.sub_(rhs) }
-  public static func *= (lhs:Self, rhs:Element) { lhs.mul_(rhs) }
-  public static func /= (lhs:Self, rhs:Element) { lhs.div_(rhs) }
-}
+  % for u,o in ipp3:
+  public func ${o}(_ b:Self)->Scalar {return ipp_reduce({ipps${u}_${n}f(p, b.p, c, $0)})}
+  % end # ipp3
 
-public struct Vector${t}: Vector {
-  public var data:AlignedStorage<${t}>
-  public init(_ data_:AlignedStorage<${t}>) {data=data_}
+% for op,f in zip('+-*/', 'add sub mul div'.split()):
+  public static func ${op}  (lhs:Self, rhs:Self  ) -> Self { return lhs.${f}( rhs) }
+  public static func ${op}  (lhs:Self, rhs:Scalar) -> Self { return lhs.${f}( rhs) }
+  public static func ${op}= (lhs:Self, rhs:Self  )         { return lhs.${f}_(rhs) }
+  public static func ${op}= (lhs:Self, rhs:Scalar)         { return lhs.${f}_(rhs) }
+% end # op
+  public static func + (lhs:Scalar, rhs:Self) -> Self { return rhs.add(lhs) }
+  public static func * (lhs:Scalar, rhs:Self) -> Self { return rhs.mul(lhs) }
 }
-% end # for t,l,n
+% end
 

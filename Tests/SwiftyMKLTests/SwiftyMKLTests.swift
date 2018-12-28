@@ -103,7 +103,7 @@ extension TestProtocol where T.Element:SupportsMKL {
 
 
   func testPowx() {
-    let exp = T(v1.map {$0 ^^ two})
+    let exp = T(v1.map {$0.pow(two)})
     let r1 = v1.powx(two)
     XCTAssertEqual(r1, exp)
     let r2 = v1.copy()
@@ -114,7 +114,7 @@ extension TestProtocol where T.Element:SupportsMKL {
   }
 
   func testPow() {
-    let exp = T(zip(v1,v2).map(^^))
+    let exp = T(zip(v1,v2).map({$0.pow($1)}))
     let r1 = v1.pow(v2)
     XCTAssertEqual(r1, exp)
     let r2 = v1.copy()
@@ -122,6 +122,12 @@ extension TestProtocol where T.Element:SupportsMKL {
     XCTAssertEqual(r2, exp)
     v1.pow_(v2)
     XCTAssertEqual(v1, exp)
+  }
+
+  func testNormDiff_Inf() {
+    let exp = zip(v1,v2).map({abs($0-$1)}).reduce(zero, {$0.max($1)})
+    let r1 = v1.normDiff_Inf(v2)
+    XCTAssertEqual(r1, exp)
   }
 
 }
