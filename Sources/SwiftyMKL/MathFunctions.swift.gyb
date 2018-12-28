@@ -1,26 +1,42 @@
 import Foundation
 
 %{
-funcs = (('pow','Foundation'), ('min', 'Swift'), ('max', 'Swift'))
+funcs1 = (('pow','Foundation'), ('min', 'Swift'), ('max', 'Swift'))
+funcs2 = """acos acosh asin asinh atan atanh cbrt cos cosh erf erfc exp exp2 expm1 j0 j1 log log10 log1p log2 logb
+nearbyint rint sin sinh tan tanh tgamma y0 y1""".split()
+funcs3 = "atan2 copysign fdim fmax fmin hypot nextafter".split()
 }%
 
 public protocol SupportsMKL:BinaryFloatingPoint {
-  init(_ value: Double)
-  var doubleValue : Double { get }
-% for f,_ in funcs:
+  init(_ value: CGFloat)
+  var cgfloat : CGFloat { get }
+% for f,_ in funcs1:
   func ${f}(_ b: Self) -> Self
+% end # f
+% for f in funcs2:
+  func ${f}() -> Self
 % end # f
 }
 
 % for t in ('Float', 'Double'):
 extension ${t} : SupportsMKL {
-  public var doubleValue : Double { return Double(self) }
+  public var cgfloat : CGFloat { return CGFloat(self) }
 
-  % for f,s in funcs:
+  % for f,s in funcs1:
   public func ${f}(_ b: ${t}) -> ${t} {return ${s}.${f}(self, b)}
   % end # f,s
 }
 % end # t
+
+extension SupportsMKL {
+  % for f in funcs2:
+  public func ${f}() -> Self {return .init(Foundation.${f}(cgfloat))}
+  % end # f
+
+  % for f in funcs3:
+  public func ${f}(_ b: Self) -> Self {return .init(Foundation.${f}(cgfloat, b.cgfloat))}
+  % end # f
+}
 
 precedencegroup ExponentiationPrecedence { associativity: right higherThan: MultiplicationPrecedence }
 infix operator ^^: ExponentiationPrecedence
