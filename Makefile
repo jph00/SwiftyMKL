@@ -1,4 +1,4 @@
-gybs = Sources/SwiftyMKL/SwiftyMKL.swift Sources/SwiftyMKL/MathFunctions.swift Tests/LinuxMain.swift Tests/SwiftyMKLTests/SwiftyMKLTests.swift
+gybs := Sources/SwiftyMKL/SwiftyMKL.swift Sources/SwiftyMKL/MathFunctions.swift Tests/LinuxMain.swift Tests/SwiftyMKLTests/SwiftyMKLTests.swift Sources/SwiftyMKL/Vector-decl.swift
 all: build
 
 run: $(gybs)
@@ -8,7 +8,11 @@ test: $(gybs)
 	swift test
 
 build: $(gybs)
-	swift build
+	swift build -v
+
+Sources/SwiftyMKL/Vector-decl.swift: Sources/SwiftyMKL/SwiftyMKL.swift.gyb
+
+Tests/LinuxMain.swift: Tests/SwiftyMKLTests/SwiftyMKLTests.swift
 
 Tests/%.swift: Tests/%.swift.gyb
 	./gyb.py --line-directive '' -o $@ $<
@@ -21,5 +25,5 @@ Sources/SwiftyMKL/%.swift: Sources/SwiftyMKL/%.swift.gyb
 
 .PHONY: clean   
 clean:
-	rm -rf .build Sources/SwiftyMKL/SwiftyMKL.swift
+	rm -rf .build $(gybs)
 

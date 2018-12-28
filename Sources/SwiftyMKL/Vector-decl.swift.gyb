@@ -1,0 +1,20 @@
+// This starts with 'z' so gyb gets to it last, since it needs SwiftyMKL.swift created already
+
+%{
+import re
+a = open('SwiftyMKL.swift', 'r').readlines()
+start_ext = 'extension Vector where Scalar'
+start = next(i for i,v in enumerate(a) if re.search(start_ext, v))
+a = a[start+1:]
+end = next(i for i,v in enumerate(a) if re.search(start_ext, v))
+a = a[:end]
+a = [re.search(' *public ((?:static)? *func (?:.*)) {', o).groups(1)[0]
+     for o in a if re.search('public', o)]
+}%
+
+public protocol Vector: BaseVector where Storage==ArrayStorage<Scalar> {
+% for l in a:
+  ${l.strip() if l else l}
+% end
+}
+

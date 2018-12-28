@@ -18,7 +18,7 @@ public class ArrayStorage<T:Equatable>: BaseVector {
   }
   public convenience init(_ array:Array<T>, alignment:Int) {
     self.init(array.count, alignment:alignment)
-    let _ = data.initialize(from:array)
+    _ = data.initialize(from:array)
   }
 
   deinit {UnsafeMutableRawBufferPointer(data).deallocate()}
@@ -26,5 +26,4 @@ public class ArrayStorage<T:Equatable>: BaseVector {
   public var description: String { return "A\(Array(data).description)" }
   public var p:MutPtrT {get {return data.baseAddress!}}
 }
-
 

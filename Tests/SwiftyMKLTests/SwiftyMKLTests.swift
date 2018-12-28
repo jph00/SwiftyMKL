@@ -19,8 +19,8 @@ class SwiftyMKLTestsFloat:  XCTestCase, TestProtocol {
 
   let zero:Float = 0.0
   let two :Float = 2.0
-  let v1:VectorFloat = [1.0, -2,  3]
-  let v2:VectorFloat = [0.5, 12, -2]
+  let v1:VectorFloat = [1.0, -2,  3, 0]
+  let v2:VectorFloat = [0.5, 12, -2, 1]
 }
 class SwiftyMKLTestsDouble:  XCTestCase, TestProtocol {
   override class func setUp() {
@@ -30,19 +30,14 @@ class SwiftyMKLTestsDouble:  XCTestCase, TestProtocol {
 
   let zero:Double = 0.0
   let two :Double = 2.0
-  let v1:VectorDouble = [1.0, -2,  3]
-  let v2:VectorDouble = [0.5, 12, -2]
+  let v1:VectorDouble = [1.0, -2,  3, 0]
+  let v2:VectorDouble = [0.5, 12, -2, 1]
 }
 
 extension TestProtocol where T.Element:SupportsMKL {
   func testVersion() {
     XCTAssertNotNil(MKL.get_version_string().range(of:"Intel"))
     XCTAssertGreaterThan(IPP.getLibVersion().major, 2012, "IPP Version too old or missing")
-  }
-
-  func testASum() {
-    let exp = v1.reduce(zero) {$0 + abs($1)}
-    XCTAssertEqual(v1.asum(), exp)
   }
 
   func testSum() {
@@ -65,6 +60,13 @@ extension TestProtocol where T.Element:SupportsMKL {
     XCTAssertEqual(r2, exp)
     v1.abs_()
     XCTAssertEqual(v1, exp)
+  }
+
+  func testASum() {
+    let exp = v1.reduce(zero) {$0 + abs($1)}
+    XCTAssertEqual(v1.asum(), exp)
+    let exp2 = v1.abs().reduce(zero, +)
+    XCTAssertEqual(v1.asum(), exp2)
   }
 
   func testAdd() {
@@ -128,6 +130,44 @@ extension TestProtocol where T.Element:SupportsMKL {
     let exp = zip(v1,v2).map({abs($0-$1)}).reduce(zero, {$0.max($1)})
     let r1 = v1.normDiff_Inf(v2)
     XCTAssertEqual(r1, exp)
+  }
+
+  func testPackIncrement() {
+    let r1 = v1.packIncrement(2, 2)
+    print(v1)
+    print(r1)
+    XCTAssertEqual(r1.count, 2)
+    XCTAssertEqual(r1[0], v1[0])
+    XCTAssertEqual(r1[1], v1[2])
+  }
+
+  func testZero() {
+    let r1 = v1.copy()
+    XCTAssertEqual(r1, v1)
+    r1.zero()
+    XCTAssertEqual(r1, v1*zero)
+  }
+
+  func testSet() {
+    let r1 = v1.copy()
+    r1.set(two)
+    XCTAssertEqual(r1, v1*zero+two)
+  }
+
+  func testMove() {
+    let r1 = v1.copy()
+    v2.move(r1, 2)
+    XCTAssertEqual(r1[0], v2[0])
+    XCTAssertEqual(r1[1], v2[1])
+    XCTAssertEqual(r1[2], v1[2])
+    XCTAssertEqual(r1[3], v1[3])
+
+    let r2 = v1.copy()
+    r2.move(r2, 2, fromIdx:1, toIdx:2)
+    XCTAssertEqual(r2[0], v1[0])
+    XCTAssertEqual(r2[1], v1[1])
+    XCTAssertEqual(r2[2], v1[1])
+    XCTAssertEqual(r2[3], v1[2])
   }
 
 }
