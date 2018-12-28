@@ -1,15 +1,14 @@
+gybs = Sources/SwiftyMKL/SwiftyMKL.swift Sources/SwiftyMKL/MathFunctions.swift Tests/LinuxMain.swift Tests/SwiftyMKLTests/SwiftyMKLTests.swift
 all: build
 
-run: Sources/SwiftyMKL/SwiftyMKL.swift
+run: $(gybs)
 	swift run
 
-test: Sources/SwiftyMKL/SwiftyMKL.swift Tests/LinuxMain.swift Tests/SwiftyMKLTests/SwiftyMKLTests.swift
+test: $(gybs)
 	swift test
 
-build: Sources/SwiftyMKL/SwiftyMKL.swift
+build: $(gybs)
 	swift build
-
-Tests/LinuxMain.swift: Tests/SwiftyMKLTests/SwiftyMKLTests.swift.gyb
 
 Tests/%.swift: Tests/%.swift.gyb
 	./gyb.py --line-directive '' -o $@ $<

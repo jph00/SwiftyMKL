@@ -1,31 +1,33 @@
 import Foundation
 
+
 public protocol SupportsMKL:BinaryFloatingPoint {
   init(_ value: Double)
   var doubleValue : Double { get }
+  func pow(_ b: Self) -> Self
+  func min(_ b: Self) -> Self
+  func max(_ b: Self) -> Self
 }
-extension Double : SupportsMKL {
-  public var doubleValue : Double { return self }
-}
+
 extension Float : SupportsMKL {
   public var doubleValue : Double { return Double(self) }
+
+  public func pow(_ b: Float) -> Float {return Foundation.pow(self, b)}
+  public func min(_ b: Float) -> Float {return Swift.min(self, b)}
+  public func max(_ b: Float) -> Float {return Swift.max(self, b)}
 }
-extension SupportsMKL {
-  public func min<T : SupportsMKL> (_ power: T) -> Self {
-    return .init(Swift.min(doubleValue, power.doubleValue))
-  }
-  public func max<T : SupportsMKL> (_ power: T) -> Self {
-    return .init(Swift.max(doubleValue, power.doubleValue))
-  }
-  public func pow<T : SupportsMKL> (_ power: T) -> Self {
-    return .init(Foundation.pow(doubleValue, power.doubleValue))
-  }
+extension Double : SupportsMKL {
+  public var doubleValue : Double { return Double(self) }
+
+  public func pow(_ b: Double) -> Double {return Foundation.pow(self, b)}
+  public func min(_ b: Double) -> Double {return Swift.min(self, b)}
+  public func max(_ b: Double) -> Double {return Swift.max(self, b)}
 }
 
 precedencegroup ExponentiationPrecedence { associativity: right higherThan: MultiplicationPrecedence }
 infix operator ^^: ExponentiationPrecedence
 
-public func ^^<T:SupportsMKL, U:SupportsMKL> (base:T, power:U) -> T {
+public func ^^<T:SupportsMKL> (base:T, power:T) -> T {
   return base.pow(power)
 }
 

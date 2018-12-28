@@ -1,0 +1,31 @@
+import Foundation
+
+%{
+funcs = (('pow','Foundation'), ('min', 'Swift'), ('max', 'Swift'))
+}%
+
+public protocol SupportsMKL:BinaryFloatingPoint {
+  init(_ value: Double)
+  var doubleValue : Double { get }
+% for f,_ in funcs:
+  func ${f}(_ b: Self) -> Self
+% end # f
+}
+
+% for t in ('Float', 'Double'):
+extension ${t} : SupportsMKL {
+  public var doubleValue : Double { return Double(self) }
+
+  % for f,s in funcs:
+  public func ${f}(_ b: ${t}) -> ${t} {return ${s}.${f}(self, b)}
+  % end # f,s
+}
+% end # t
+
+precedencegroup ExponentiationPrecedence { associativity: right higherThan: MultiplicationPrecedence }
+infix operator ^^: ExponentiationPrecedence
+
+public func ^^<T:SupportsMKL> (base:T, power:T) -> T {
+  return base.pow(power)
+}
+
