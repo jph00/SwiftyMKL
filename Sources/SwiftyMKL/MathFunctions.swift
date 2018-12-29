@@ -3,7 +3,11 @@ import Foundation
 
 public protocol SupportsMKL:BinaryFloatingPoint {
   init(_ value: CGFloat)
-  var cgfloat : CGFloat { get }
+  init()
+  var cgfloat : CGFloat {get}
+  static var zero:Self {get}
+  static var one:Self {get}
+  static var two:Self {get}
   func pow(_ b: Self) -> Self
   func min(_ b: Self) -> Self
   func max(_ b: Self) -> Self
@@ -41,6 +45,8 @@ public protocol SupportsMKL:BinaryFloatingPoint {
 
 extension Float : SupportsMKL {
   public var cgfloat : CGFloat { return CGFloat(self) }
+  public static var one:Float {get {return 1}}
+  public static var two:Float {get {return 2}}
 
   public func pow(_ b: Float) -> Float {return Foundation.pow(self, b)}
   public func min(_ b: Float) -> Float {return Swift.min(self, b)}
@@ -48,6 +54,8 @@ extension Float : SupportsMKL {
 }
 extension Double : SupportsMKL {
   public var cgfloat : CGFloat { return CGFloat(self) }
+  public static var one:Double {get {return 1}}
+  public static var two:Double {get {return 2}}
 
   public func pow(_ b: Double) -> Double {return Foundation.pow(self, b)}
   public func min(_ b: Double) -> Double {return Swift.min(self, b)}
@@ -55,6 +63,8 @@ extension Double : SupportsMKL {
 }
 
 extension SupportsMKL {
+  public static var zero:Self {get {return .init()}}
+
   public func acos() -> Self {return .init(Foundation.acos(cgfloat))}
   public func acosh() -> Self {return .init(Foundation.acosh(cgfloat))}
   public func asin() -> Self {return .init(Foundation.asin(cgfloat))}

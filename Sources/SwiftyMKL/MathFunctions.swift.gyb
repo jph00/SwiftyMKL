@@ -9,7 +9,11 @@ funcs3 = "atan2 copysign fdim fmax fmin hypot nextafter".split()
 
 public protocol SupportsMKL:BinaryFloatingPoint {
   init(_ value: CGFloat)
-  var cgfloat : CGFloat { get }
+  init()
+  var cgfloat : CGFloat {get}
+  static var zero:Self {get}
+  static var one:Self {get}
+  static var two:Self {get}
 % for f,_ in funcs1:
   func ${f}(_ b: Self) -> Self
 % end # f
@@ -21,6 +25,8 @@ public protocol SupportsMKL:BinaryFloatingPoint {
 % for t in ('Float', 'Double'):
 extension ${t} : SupportsMKL {
   public var cgfloat : CGFloat { return CGFloat(self) }
+  public static var one:${t} {get {return 1}}
+  public static var two:${t} {get {return 2}}
 
   % for f,s in funcs1:
   public func ${f}(_ b: ${t}) -> ${t} {return ${s}.${f}(self, b)}
@@ -29,6 +35,8 @@ extension ${t} : SupportsMKL {
 % end # t
 
 extension SupportsMKL {
+  public static var zero:Self {get {return .init()}}
+
   % for f in funcs2:
   public func ${f}() -> Self {return .init(Foundation.${f}(cgfloat))}
   % end # f

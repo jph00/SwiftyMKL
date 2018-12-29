@@ -2,15 +2,8 @@ import Foundation
 import CMKL
 import CIPP
 
-public func defaultValue<T>() -> T {
-  let ptr = UnsafeMutablePointer<T>.allocate(capacity:1)
-  let retval = ptr.pointee
-  ptr.deallocate()
-  return retval;
-}
 
-
-extension Vector {
+extension Vector { 
   public var p:MutPtrT {get {return data.p}}
   public var description: String { return "V\(Array(data).description)" }
   public init(_ data:Array<Scalar>) {self.init(ArrayStorage<Scalar>(data))}
@@ -21,7 +14,7 @@ extension Vector {
   typealias ippFuncReduceHint = (PtrT,Int32,MutPtrT,IppHintAlgorithm)->IppStatus
   typealias ippFuncReduce = (PtrT,Int32,MutPtrT)->IppStatus
   func ipp_reduce(_ f:(MutPtrT)->IppStatus)->Scalar {
-    var res:Scalar=defaultValue(); let _=f(&res); return res
+    var res:Scalar=Scalar.init(); let _=f(&res); return res
   }
   func ipp_reduce(_ f:ippFuncReduceHint)->Scalar { return ipp_reduce({f(p, c, $0, ippAlgHintFast)}) }
   func ipp_reduce(_ f:ippFuncReduce    )->Scalar { return ipp_reduce({f(p, c, $0)}) }
@@ -39,15 +32,16 @@ extension Vector {
   func new_call<T>(_ f:(T, T, Self)->(), _ b:T, _ c:T, n:Int)->Self { let res = new(n); f(b, c, res); return res }
 }
 
+
 public struct VectorFloat: Vector {
   public typealias Scalar=Float
-  public var data:ArrayStorage<Float>
-  public init(_ data_:ArrayStorage<Float>) {data=data_}
+  public var data:ArrayStorage<Scalar>
+  public init(_ data_:ArrayStorage<Scalar>) {data=data_}
 }
 public struct VectorDouble: Vector {
   public typealias Scalar=Double
-  public var data:ArrayStorage<Double>
-  public init(_ data_:ArrayStorage<Double>) {data=data_}
+  public var data:ArrayStorage<Scalar>
+  public init(_ data_:ArrayStorage<Scalar>) {data=data_}
 }
 
 extension Vector where Scalar==Float {
@@ -59,17 +53,16 @@ extension Vector where Scalar==Float {
   public func move(_ b:Self, _ n:Int) { ippsMove_32f(p, b.p, numericCast(n)) }
   public func move(_ b:Self, _ n:Int, fromIdx:Int, toIdx:Int) { ippsMove_32f(p+fromIdx, b.p+toIdx, numericCast(n)) }
 
-/*
-vsPackI,(const MKL_INT n,  const float  a[], const MKL_INT   incra, float  y[]))
-vsPackV,(const MKL_INT n,  const float  a[], const MKL_INT ia[], float  y[]))
-vsPackM,(const MKL_INT n,  const float  a[], const MKL_INT ma[], float  y[]))
-*/
-  public func packIncrement(_ incr:Int, _ n:Int, _ dest:Self) { vsPackI(numericCast(n), p, numericCast(incr), dest.p) }
-  public func packIncrement(_ incr:Int, _ n:Int)->Self { return new_call(packIncrement, incr, n, n:n) }
+  public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { vsPackI(numericCast(n), p+from, numericCast(incr), dest.p) }
+  public func packIncrement(_ incr:Int, _ from:Int, _ n:Int)->Self {
+    let res = new(n)
+    packIncrement(incr, from, n, res)
+    return res
+  }
   public func packIndices(_ idxs:[Int32], _ dest:Self) { vsPackV(numericCast(idxs.count), p, idxs, dest.p) }
   public func packIndices(_ idxs:[Int32])->Self { return new_call(packIndices, idxs, n:idxs.count) }
   public func packMasked(_ mask:[Int32], _ dest:Self) { vsPackM(c, p, mask, dest.p) }
-  public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:mask.count) }
+  public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:Int(mask.reduce(0,+))) }
 
   public func ln(_ dest: Self) { vsLn(c, p, dest.p) }
   public func ln_() { ln(self) }
@@ -254,17 +247,16 @@ extension Vector where Scalar==Double {
   public func move(_ b:Self, _ n:Int) { ippsMove_64f(p, b.p, numericCast(n)) }
   public func move(_ b:Self, _ n:Int, fromIdx:Int, toIdx:Int) { ippsMove_64f(p+fromIdx, b.p+toIdx, numericCast(n)) }
 
-/*
-vsPackI,(const MKL_INT n,  const float  a[], const MKL_INT   incra, float  y[]))
-vsPackV,(const MKL_INT n,  const float  a[], const MKL_INT ia[], float  y[]))
-vsPackM,(const MKL_INT n,  const float  a[], const MKL_INT ma[], float  y[]))
-*/
-  public func packIncrement(_ incr:Int, _ n:Int, _ dest:Self) { vdPackI(numericCast(n), p, numericCast(incr), dest.p) }
-  public func packIncrement(_ incr:Int, _ n:Int)->Self { return new_call(packIncrement, incr, n, n:n) }
+  public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { vdPackI(numericCast(n), p+from, numericCast(incr), dest.p) }
+  public func packIncrement(_ incr:Int, _ from:Int, _ n:Int)->Self {
+    let res = new(n)
+    packIncrement(incr, from, n, res)
+    return res
+  }
   public func packIndices(_ idxs:[Int32], _ dest:Self) { vdPackV(numericCast(idxs.count), p, idxs, dest.p) }
   public func packIndices(_ idxs:[Int32])->Self { return new_call(packIndices, idxs, n:idxs.count) }
   public func packMasked(_ mask:[Int32], _ dest:Self) { vdPackM(c, p, mask, dest.p) }
-  public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:mask.count) }
+  public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:Int(mask.reduce(0,+))) }
 
   public func ln(_ dest: Self) { vdLn(c, p, dest.p) }
   public func ln_() { ln(self) }

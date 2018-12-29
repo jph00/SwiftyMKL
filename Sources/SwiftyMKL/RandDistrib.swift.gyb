@@ -1,0 +1,87 @@
+import CMKL
+
+// #defines from mkl_vsl_defines.h not auto-converted by swift
+let VSL_BRNG_INC = 1<<VSL_BRNG_SHIFT
+let VSL_BRNG_MCG31        = VSL_BRNG_INC
+let VSL_BRNG_R250         = VSL_BRNG_MCG31 + VSL_BRNG_INC
+let VSL_BRNG_MRG32K3A     = VSL_BRNG_R250 + VSL_BRNG_INC
+let VSL_BRNG_MCG59        = VSL_BRNG_MRG32K3A + VSL_BRNG_INC
+let VSL_BRNG_WH           = VSL_BRNG_MCG59 + VSL_BRNG_INC
+let VSL_BRNG_SOBOL        = VSL_BRNG_WH + VSL_BRNG_INC
+let VSL_BRNG_NIEDERR      = VSL_BRNG_SOBOL + VSL_BRNG_INC
+let VSL_BRNG_MT19937      = VSL_BRNG_NIEDERR + VSL_BRNG_INC
+let VSL_BRNG_MT2203       = VSL_BRNG_MT19937 + VSL_BRNG_INC
+let VSL_BRNG_IABSTRACT    = VSL_BRNG_MT2203 + VSL_BRNG_INC
+let VSL_BRNG_DABSTRACT    = VSL_BRNG_IABSTRACT + VSL_BRNG_INC
+let VSL_BRNG_SABSTRACT    = VSL_BRNG_DABSTRACT + VSL_BRNG_INC
+let VSL_BRNG_SFMT19937    = VSL_BRNG_SABSTRACT + VSL_BRNG_INC
+let VSL_BRNG_NONDETERM    = VSL_BRNG_SFMT19937 + VSL_BRNG_INC
+let VSL_BRNG_ARS5         = VSL_BRNG_NONDETERM + VSL_BRNG_INC
+let VSL_BRNG_PHILOX4X32X10 = VSL_BRNG_ARS5 + VSL_BRNG_INC
+
+public class RandDistribStream {
+  var p:Optional<VSLStreamStatePtr>
+  public init() { vslNewStream(&p, 0, UInt32.random(in: 0..<UInt32.max)) }
+  deinit { vslDeleteStream(&p) }
+}
+
+%{
+  types = ('Float', 'Double')
+  rng_defs = [
+    "Gaussian VSL_RNG_METHOD_GAUSSIANMV_ICDF",
+    "Uniform VSL_RNG_METHOD_UNIFORM_STD",
+    "Exponential VSL_RNG_METHOD_EXPONENTIAL_ICDF",
+    "Laplace VSL_RNG_METHOD_LAPLACE_ICDF",
+    "Cauchy VSL_RNG_METHOD_CAUCHY_ICDF",
+    "Rayleigh VSL_RNG_METHOD_RAYLEIGH_ICDF",
+    "Gumbel VSL_RNG_METHOD_GUMBEL_ICDF"
+  ]
+  rng_defs = [o.split() for o in rng_defs]
+  def lower1(s): return s[:1].lower() + s[1:]
+  rng_defs = [(lower1(name), name, method) for name,method in rng_defs]
+}%
+
+public protocol RandDistribProtocol { 
+  associatedtype Scalar:SupportsMKL
+  associatedtype V:Vector
+
+  var stream:RandDistribStream {get}
+
+% for lname,name,method in rng_defs:
+  func ${lname}(_ dest:V, _ a:Scalar, _ b:Scalar)
+  func ${lname}(_ n:Int, _ a:Scalar, _ b:Scalar)->V
+% end
+
+  func gaussianMulti(_ dest:V, _ means:Array<Scalar>, _ stdevs:Array<Scalar>)
+  func gaussianMulti(_ n:Int, _ means:Array<Scalar>, _ stdevs:Array<Scalar>)->V
+}
+
+% for t,l in zip(types, 'sd'):
+struct RandDistrib${t}:RandDistribProtocol {
+  typealias Scalar=${t}
+  typealias V=Vector${t}
+  var stream = RandDistribStream()
+
+  % for lname,name,method in rng_defs:
+  public func ${lname}(_ dest:V, _ a: Scalar, _ b: Scalar) {
+    v${l}Rng${name}(${method}, stream.p, dest.c, dest.p, a, b)
+  }
+  public func ${lname}(_ n:Int, _ a: Scalar, _ b: Scalar)->V {
+    let dest = V(n)
+    ${lname}(dest, a, b)
+    return dest
+  }
+  % end
+
+  public func gaussianMulti(_ dest:V, _ means:Array<Scalar>, _ stdevs:Array<Scalar>) {
+    v${l}RngGaussianMV(VSL_RNG_METHOD_GAUSSIAN_ICDF, stream.p, numericCast(dest.count/means.count), dest.p, numericCast(means.count), VSL_MATRIX_STORAGE_DIAGONAL, means, stdevs);
+  }
+  public func gaussianMulti(_ n:Int, _ means:Array<Scalar>, _ stdevs:Array<Scalar>)->V {
+    let dest = V(n * means.count)
+    gaussianMulti(dest, means, stdevs)
+    return dest
+  }
+
+}
+% end
+

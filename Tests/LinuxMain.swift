@@ -16,9 +16,14 @@ extension SwiftyMKLTestsFloat {
       ("testPow", testPow),
       ("testNormDiff_Inf", testNormDiff_Inf),
       ("testPackIncrement", testPackIncrement),
+      ("testPackIndices", testPackIndices),
+      ("testPackMasked", testPackMasked),
       ("testZero", testZero),
       ("testSet", testSet),
       ("testMove", testMove),
+      ("testGaussian", testGaussian),
+      ("testGaussianMulti1", testGaussianMulti1),
+      ("testGaussianMulti2", testGaussianMulti2),
     ]
   }
 }
@@ -36,9 +41,14 @@ extension SwiftyMKLTestsDouble {
       ("testPow", testPow),
       ("testNormDiff_Inf", testNormDiff_Inf),
       ("testPackIncrement", testPackIncrement),
+      ("testPackIndices", testPackIndices),
+      ("testPackMasked", testPackMasked),
       ("testZero", testZero),
       ("testSet", testSet),
       ("testMove", testMove),
+      ("testGaussian", testGaussian),
+      ("testGaussianMulti1", testGaussianMulti1),
+      ("testGaussianMulti2", testGaussianMulti2),
     ]
   }
 }
