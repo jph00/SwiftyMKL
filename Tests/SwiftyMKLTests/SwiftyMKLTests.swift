@@ -2,19 +2,18 @@ import XCTest
 @testable import SwiftyMKL
 
 
-protocol TestProtocol where T:Vector, RNG:RandDistribProtocol {
-  associatedtype T
-  associatedtype RNG
-  typealias E=T.Element
-
+protocol TestProtocol {
+  associatedtype E:SupportsMKL
+  typealias T=VectorS<E>
   var v1:T {get}
   var v2:T {get}
-  var rng:RNG {get}
+  var rng:RandDistrib {get}
+  var z:E {get}
 }
 
+class SwiftyMKLTestsFloat: XCTestCase,TestProtocol {
+  typealias E=Float
 
-class SwiftyMKLTestsFloat:  XCTestCase, TestProtocol {
-  typealias T=VectorFloat
   override class func setUp() {
     super.setUp()
     IPP.setup()
@@ -22,10 +21,12 @@ class SwiftyMKLTestsFloat:  XCTestCase, TestProtocol {
 
   let v1:T = [1.0, -2,  3, 0]
   let v2:T = [0.5, 12, -2, 1]
-  let rng = RandDistribFloat()
+  let rng = RandDistrib()
+  let z:E = 0.0
 }
-class SwiftyMKLTestsDouble:  XCTestCase, TestProtocol {
-  typealias T=VectorDouble
+class SwiftyMKLTestsDouble: XCTestCase,TestProtocol {
+  typealias E=Double
+
   override class func setUp() {
     super.setUp()
     IPP.setup()
@@ -33,12 +34,11 @@ class SwiftyMKLTestsDouble:  XCTestCase, TestProtocol {
 
   let v1:T = [1.0, -2,  3, 0]
   let v2:T = [0.5, 12, -2, 1]
-  let rng = RandDistribDouble()
+  let rng = RandDistrib()
+  let z:E = 0.0
 }
 
-extension TestProtocol where T.Element:SupportsMKL {
-  var z:E {get {return E.zero}}
-
+extension TestProtocol {
   func testVersion() {
     XCTAssertNotNil(MKL.get_version_string().range(of:"Intel"))
     XCTAssertGreaterThan(IPP.getLibVersion().major, 2012, "IPP Version too old or missing")
@@ -63,6 +63,7 @@ extension TestProtocol where T.Element:SupportsMKL {
     v1.abs(r2)
     XCTAssertEqual(r2, exp)
     v1.abs_()
+    print(v1)
     XCTAssertEqual(v1, exp)
   }
 
@@ -91,31 +92,31 @@ extension TestProtocol where T.Element:SupportsMKL {
   }
 
   func testDivC() {
-    let exp = T(v1.map {$0/E.two})
-    let r1 = v1.div(E.two)
+    let exp = T(v1.map {$0/E(2.0)})
+    let r1 = v1.divC(E(2.0))
     XCTAssertEqual(r1, exp)
     let r2 = v1.copy()
-    v1.div(E.two, r2)
+    v1.divC(E(2.0), r2)
     XCTAssertEqual(r2, exp)
-    let r3 = v1 / E.two
+    let r3 = v1 / E(2.0)
     XCTAssertEqual(r3, exp)
     let r4 = v1.copy()
-    r4.div_(E.two)
+    r4.divC_(E(2.0))
     XCTAssertEqual(r4, exp)
     let r5 = v1.copy()
-    r5 /= E.two
+    r5 /= E(2.0)
     XCTAssertEqual(r5, exp)
   }
 
 
   func testPowx() {
-    let exp = T(v1.map {$0.pow(E.two)})
-    let r1 = v1.powx(E.two)
+    let exp = T(v1.map {$0.pow(E(2.0))})
+    let r1 = v1.powx(E(2.0))
     XCTAssertEqual(r1, exp)
     let r2 = v1.copy()
-    v1.powx(E.two, r2)
+    v1.powx(E(2.0), r2)
     XCTAssertEqual(r2, exp)
-    v1.powx_(E.two)
+    v1.powx_(E(2.0))
     XCTAssertEqual(v1, exp)
   }
 
@@ -170,8 +171,8 @@ extension TestProtocol where T.Element:SupportsMKL {
 
   func testSet() {
     let r1 = v1.copy()
-    r1.set(E.two)
-    XCTAssertEqual(r1, v1*z+E.two)
+    r1.set(E(2.0))
+    XCTAssertEqual(r1, v1*z+E(2.0))
   }
 
   func testMove() {
@@ -191,7 +192,7 @@ extension TestProtocol where T.Element:SupportsMKL {
   }
 
   func testGaussian() {
-    let r1 = rng.gaussian(1000, 5, 2)
+    let r1 = rng.gaussian(1000, 5.0, 2.0)
     XCTAssertEqual(r1.count, 1000)
     XCTAssertGreaterThan(r1.mean(), 4)
     XCTAssertLessThan(r1.mean(), 6)
@@ -225,4 +226,3 @@ extension TestProtocol where T.Element:SupportsMKL {
   }
 
 }
-

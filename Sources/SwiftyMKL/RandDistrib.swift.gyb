@@ -26,62 +26,78 @@ public class RandDistribStream {
 }
 
 %{
-  types = ('Float', 'Double')
-  rng_defs = [
-    "Gaussian VSL_RNG_METHOD_GAUSSIANMV_ICDF",
-    "Uniform VSL_RNG_METHOD_UNIFORM_STD",
-    "Exponential VSL_RNG_METHOD_EXPONENTIAL_ICDF",
-    "Laplace VSL_RNG_METHOD_LAPLACE_ICDF",
-    "Cauchy VSL_RNG_METHOD_CAUCHY_ICDF",
-    "Rayleigh VSL_RNG_METHOD_RAYLEIGH_ICDF",
-    "Gumbel VSL_RNG_METHOD_GUMBEL_ICDF"
-  ]
-  rng_defs = [o.split() for o in rng_defs]
-  def lower1(s): return s[:1].lower() + s[1:]
-  rng_defs = [(lower1(name), name, method) for name,method in rng_defs]
+types = ('Float', 'Double')
+rng_defs = [
+  "Gaussian VSL_RNG_METHOD_GAUSSIANMV_ICDF",
+  "Uniform VSL_RNG_METHOD_UNIFORM_STD",
+  "Exponential VSL_RNG_METHOD_EXPONENTIAL_ICDF",
+  "Laplace VSL_RNG_METHOD_LAPLACE_ICDF",
+  "Cauchy VSL_RNG_METHOD_CAUCHY_ICDF",
+  "Rayleigh VSL_RNG_METHOD_RAYLEIGH_ICDF",
+  "Gumbel VSL_RNG_METHOD_GUMBEL_ICDF"
+]
+rng_defs = [o.split() for o in rng_defs]
+def lower1(s): return s[:1].lower() + s[1:]
+rng_defs = [(lower1(name), name, method) for name,method in rng_defs]
+
+ri1 = [
+  ('Uniform', 'VSL_RNG_METHOD_UNIFORM_STD', 'lowerinc', 'Int32', 'upperexc', 'Int32'),
+  ('Binomial', 'VSL_RNG_METHOD_BINOMIAL_BTPE', 'ntrial',  'Int32','p', 'Double'),
+  ('NegBinomial', 'VSL_RNG_METHOD_NEGBINOMIAL_NBAR', 'a', 'Double', 'p', 'Double')
+]
+ri2 = [
+  ('Bernoulli', 'VSL_RNG_METHOD_BERNOULLI_ICDF', 'p'),
+  ('Geometric', 'VSL_RNG_METHOD_GEOMETRIC_ICDF', 'p'),
+  ('Poisson', 'VSL_RNG_METHOD_POISSON_PTPE', 'lambda')
+]
 }%
 
-public protocol RandDistribProtocol { 
-  associatedtype Scalar:SupportsMKL
-  associatedtype V:Vector
-
-  var stream:RandDistribStream {get}
-
-% for lname,name,method in rng_defs:
-  func ${lname}(_ dest:V, _ a:Scalar, _ b:Scalar)
-  func ${lname}(_ n:Int, _ a:Scalar, _ b:Scalar)->V
-% end
-
-  func gaussianMulti(_ dest:V, _ means:Array<Scalar>, _ stdevs:Array<Scalar>)
-  func gaussianMulti(_ n:Int, _ means:Array<Scalar>, _ stdevs:Array<Scalar>)->V
-}
-
-% for t,l in zip(types, 'sd'):
-struct RandDistrib${t}:RandDistribProtocol {
-  typealias Scalar=${t}
-  typealias V=Vector${t}
+struct RandDistrib {
   var stream = RandDistribStream()
 
+% for t,l in zip(types, 'sd'):
   % for lname,name,method in rng_defs:
-  public func ${lname}(_ dest:V, _ a: Scalar, _ b: Scalar) {
+  public func ${lname}(_ dest:VectorS<${t}>, _ a: ${t}, _ b: ${t}) {
     v${l}Rng${name}(${method}, stream.p, dest.c, dest.p, a, b)
   }
-  public func ${lname}(_ n:Int, _ a: Scalar, _ b: Scalar)->V {
-    let dest = V(n)
+  public func ${lname}(_ n:Int, _ a: ${t}, _ b: ${t})->VectorS<${t}> {
+    let dest = VectorS<${t}>(n)
     ${lname}(dest, a, b)
     return dest
   }
   % end
 
-  public func gaussianMulti(_ dest:V, _ means:Array<Scalar>, _ stdevs:Array<Scalar>) {
-    v${l}RngGaussianMV(VSL_RNG_METHOD_GAUSSIAN_ICDF, stream.p, numericCast(dest.count/means.count), dest.p, numericCast(means.count), VSL_MATRIX_STORAGE_DIAGONAL, means, stdevs);
+  public func gaussianMulti(_ dest:VectorS<${t}>, _ means:Array<${t}>, _ stdevs:Array<${t}>) {
+    v${l}RngGaussianMV(VSL_RNG_METHOD_GAUSSIAN_ICDF, stream.p, numericCast(dest.count/means.count),
+      dest.p, numericCast(means.count), VSL_MATRIX_STORAGE_DIAGONAL, means, stdevs);
   }
-  public func gaussianMulti(_ n:Int, _ means:Array<Scalar>, _ stdevs:Array<Scalar>)->V {
-    let dest = V(n * means.count)
+  public func gaussianMulti(_ n:Int, _ means:Array<${t}>, _ stdevs:Array<${t}>)->VectorS<${t}> {
+    let dest = VectorS<${t}>(n * means.count)
     gaussianMulti(dest, means, stdevs)
     return dest
   }
+% end # t,l
 
-}
+% for n,m,a,t1,b,t2 in ri1:
+  public func ${lower1(n)}(_ dest: inout Array<Int32>, _ ${a}:${t1}, _ ${b}:${t2}) {
+    viRng${n}(${m}, stream.p, numericCast(dest.count), &dest, ${a}, ${b})
+  }
+  public func ${lower1(n)}(_ n:Int, _ ${a}:${t1}, _ ${b}:${t2})->Array<Int32> {
+    var res = Array<Int32>(repeating:0, count:n)
+    ${lower1(n)}(&res, ${a}, ${b})
+    return res
+  }
 % end
+
+% for n,m,a in ri2:
+  public func ${lower1(n)}(_ dest: inout Array<Int32>, _ ${a}:Double) {
+    viRng${n}(${m}, stream.p, numericCast(dest.count), &dest, ${a})
+  }
+  public func ${lower1(n)}(_ n:Int, _ ${a}:Double)->Array<Int32> {
+    var res = Array<Int32>(repeating:0, count:n)
+    ${lower1(n)}(&res, ${a})
+    return res
+  }
+% end
+}
 

@@ -28,17 +28,9 @@ extension VectorBase {
   }
 }
 
-// float   sasum(const MKL_INT *n, const float *x, const MKL_INT *incx);
-public protocol SupportsMKL:BinaryFloatingPoint { 
-  typealias T=Self
-  static func asum(_ n:Int32, _ x:Array<Self>, _ incx:Int32)->Self
-}
-extension Double:SupportsMKL {
-  public static func asum(_ n:Int32, _ x:Array<T>, _ incx:Int32)->T { return cblas_dasum(n,x,incx) }
-}
-extension Float:SupportsMKL {
-  public static func asum(_ n:Int32, _ x:Array<T>, _ incx:Int32)->T { return cblas_sasum(n,x,incx) }
-}
+public protocol SupportsMKL:BinaryFloatingPoint { }
+extension Double:SupportsMKL {}
+extension Float:SupportsMKL {}
 
 public class ArrayStorage<T:SupportsMKL>: VectorBase {
   public typealias Scalar=T
@@ -49,21 +41,27 @@ public class ArrayStorage<T:SupportsMKL>: VectorBase {
 
 public protocol VectorProtocol: VectorBase
   where Storage==ArrayStorage<Scalar>, Scalar:SupportsMKL { 
+  //Behaviour is the same regardless of whether we include this
+  //func asum()->Scalar
 }
 
-//public static func asum(_ a:ArrayStorage<Double>)->Double { return cblas_dasum(a.c, a.p, 1) }
 extension VectorProtocol {
   public init(_ data_:Array<Scalar>) {self.init(ArrayStorage<Scalar>(data_))}
-  public var p:Array<Scalar> {return data.p}
-  func asum()->Scalar  { return Scalar.asum(c, p, 1) }
+  // XXX: Awful hack - dummy implementation we hope is never used
+  public func asum()->Scalar { fatalError() }
 }
+
+extension VectorProtocol where Scalar==Float  { public func asum()->Scalar { return cblas_sasum(c, data.p, 1) } }
+extension VectorProtocol where Scalar==Double { public func asum()->Scalar { return cblas_dasum(c, data.p, 1) } }
 
 public struct Vector<Scalar:SupportsMKL>: VectorProtocol {
   public var data:ArrayStorage<Scalar>
   public init(_ data_:ArrayStorage<Scalar>) {data=data_}
 }
 
+// This works
 let a:Vector<Float> = [1.0, 2, 4]
+print("a")
 print(a.asum())
 
 protocol P {
@@ -80,5 +78,7 @@ struct F:P {
   let v:Vector<Float> = [1.0,2]
 }
 let b = F()
+print("b")
+// XXX: This fails
 b.f()
 

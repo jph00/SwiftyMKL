@@ -1,4 +1,8 @@
 import Foundation
+import CMKL
+import CIPP
+
+%{ import sys; sys.path.append('../..'); from funcs import * }%
 
 %{
 funcs1 = (('pow','Foundation'), ('min', 'Swift'), ('max', 'Swift'))
@@ -8,35 +12,57 @@ funcs3 = "atan2 copysign fdim fmax fmin hypot nextafter".split()
 }%
 
 public protocol SupportsMKL:BinaryFloatingPoint {
+  typealias T=Self
+  typealias PtrT = UnsafePointer<T>
+  typealias MutPtrT = UnsafeMutablePointer<T>
+
   init(_ value: CGFloat)
+  init(_ value: Self)
   init()
   var cgfloat : CGFloat {get}
-  static var zero:Self {get}
-  static var one:Self {get}
-  static var two:Self {get}
 % for f,_ in funcs1:
   func ${f}(_ b: Self) -> Self
 % end # f
 % for f in funcs2:
   func ${f}() -> Self
 % end # f
+
+% for f in mkl_lines:
+  static func ${get_decl(f, mkl_re)}
+% end
+
+% for f in vml_lines:
+  static func ${get_decl(f, vml_re)}
+% end
+
+% for f in ipp_lines:
+  static func ${get_decl(f, ipp_re)}
+% end
 }
 
-% for t in ('Float', 'Double'):
+% for t,l,n in typ_typs:
 extension ${t} : SupportsMKL {
   public var cgfloat : CGFloat { return CGFloat(self) }
-  public static var one:${t} {get {return 1}}
-  public static var two:${t} {get {return 2}}
 
   % for f,s in funcs1:
   public func ${f}(_ b: ${t}) -> ${t} {return ${s}.${f}(self, b)}
   % end # f,s
+
+  % for f in mkl_lines:
+  public static func ${get_decl(f, mkl_re)} { ${get_mkl_impl(f,t)} }
+  % end
+
+  % for f in vml_lines:
+  public static func ${get_decl(f, vml_re)} { ${get_vml_impl(f,t)} }
+  % end
+
+  % for f in ipp_lines:
+  public static func ${get_decl(f, ipp_re)} { ${get_ipp_impl(f,t)} }
+  % end
 }
 % end # t
 
 extension SupportsMKL {
-  public static var zero:Self {get {return .init()}}
-
   % for f in funcs2:
   public func ${f}() -> Self {return .init(Foundation.${f}(cgfloat))}
   % end # f

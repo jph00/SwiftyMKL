@@ -1,15 +1,8 @@
-public protocol Subscriptable: Sequence {
-  var count:Int {get}
-  subscript(i: Int)->Element {get set}
-}
-extension Array:                      Subscriptable {}
-extension UnsafeMutableBufferPointer: Subscriptable {}
-
 public protocol BaseVector :
-    Equatable, RandomAccessCollection, MutableCollection, ExpressibleByArrayLiteral, CustomStringConvertible, Subscriptable
+    Equatable, RandomAccessCollection, MutableCollection, ExpressibleByArrayLiteral, CustomStringConvertible
     where Element:Equatable, Element==Scalar {
   associatedtype Scalar
-  associatedtype Storage:Subscriptable where Storage.Element==Scalar
+  associatedtype Storage:MutableCollection where Storage.Element==Scalar, Storage.Index==Int
   var data:Storage {get set}
   init(_ data:Storage)
   init(_ data:Array<Scalar>)

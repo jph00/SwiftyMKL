@@ -12,8 +12,6 @@ test: $(gybs)
 build: $(gybs)
 	swift build -v
 
-Sources/SwiftyMKL/Vector-decl.swift: Sources/SwiftyMKL/SwiftyMKL.swift.gyb
-
 Tests/LinuxMain.swift: Tests/SwiftyMKLTests/SwiftyMKLTests.swift
 
 Tests/%.swift: Tests/%.swift.gyb
