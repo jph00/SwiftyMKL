@@ -29,135 +29,135 @@ public class RandDistribStream {
 struct RandDistrib {
   var stream = RandDistribStream()
 
-  public func gaussian(_ dest:VectorS<Float>, _ a: Float, _ b: Float) {
+  public func gaussian(_ dest:VectorP<Float>, _ a: Float, _ b: Float) {
     vsRngGaussian(VSL_RNG_METHOD_GAUSSIANMV_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func gaussian(_ n:Int, _ a: Float, _ b: Float)->VectorS<Float> {
-    let dest = VectorS<Float>(n)
+  public func gaussian(_ n:Int, _ a: Float, _ b: Float)->VectorP<Float> {
+    let dest = VectorP<Float>(n)
     gaussian(dest, a, b)
     return dest
   }
-  public func uniform(_ dest:VectorS<Float>, _ a: Float, _ b: Float) {
+  public func uniform(_ dest:VectorP<Float>, _ a: Float, _ b: Float) {
     vsRngUniform(VSL_RNG_METHOD_UNIFORM_STD, stream.p, dest.c, dest.p, a, b)
   }
-  public func uniform(_ n:Int, _ a: Float, _ b: Float)->VectorS<Float> {
-    let dest = VectorS<Float>(n)
+  public func uniform(_ n:Int, _ a: Float, _ b: Float)->VectorP<Float> {
+    let dest = VectorP<Float>(n)
     uniform(dest, a, b)
     return dest
   }
-  public func exponential(_ dest:VectorS<Float>, _ a: Float, _ b: Float) {
+  public func exponential(_ dest:VectorP<Float>, _ a: Float, _ b: Float) {
     vsRngExponential(VSL_RNG_METHOD_EXPONENTIAL_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func exponential(_ n:Int, _ a: Float, _ b: Float)->VectorS<Float> {
-    let dest = VectorS<Float>(n)
+  public func exponential(_ n:Int, _ a: Float, _ b: Float)->VectorP<Float> {
+    let dest = VectorP<Float>(n)
     exponential(dest, a, b)
     return dest
   }
-  public func laplace(_ dest:VectorS<Float>, _ a: Float, _ b: Float) {
+  public func laplace(_ dest:VectorP<Float>, _ a: Float, _ b: Float) {
     vsRngLaplace(VSL_RNG_METHOD_LAPLACE_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func laplace(_ n:Int, _ a: Float, _ b: Float)->VectorS<Float> {
-    let dest = VectorS<Float>(n)
+  public func laplace(_ n:Int, _ a: Float, _ b: Float)->VectorP<Float> {
+    let dest = VectorP<Float>(n)
     laplace(dest, a, b)
     return dest
   }
-  public func cauchy(_ dest:VectorS<Float>, _ a: Float, _ b: Float) {
+  public func cauchy(_ dest:VectorP<Float>, _ a: Float, _ b: Float) {
     vsRngCauchy(VSL_RNG_METHOD_CAUCHY_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func cauchy(_ n:Int, _ a: Float, _ b: Float)->VectorS<Float> {
-    let dest = VectorS<Float>(n)
+  public func cauchy(_ n:Int, _ a: Float, _ b: Float)->VectorP<Float> {
+    let dest = VectorP<Float>(n)
     cauchy(dest, a, b)
     return dest
   }
-  public func rayleigh(_ dest:VectorS<Float>, _ a: Float, _ b: Float) {
+  public func rayleigh(_ dest:VectorP<Float>, _ a: Float, _ b: Float) {
     vsRngRayleigh(VSL_RNG_METHOD_RAYLEIGH_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func rayleigh(_ n:Int, _ a: Float, _ b: Float)->VectorS<Float> {
-    let dest = VectorS<Float>(n)
+  public func rayleigh(_ n:Int, _ a: Float, _ b: Float)->VectorP<Float> {
+    let dest = VectorP<Float>(n)
     rayleigh(dest, a, b)
     return dest
   }
-  public func gumbel(_ dest:VectorS<Float>, _ a: Float, _ b: Float) {
+  public func gumbel(_ dest:VectorP<Float>, _ a: Float, _ b: Float) {
     vsRngGumbel(VSL_RNG_METHOD_GUMBEL_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func gumbel(_ n:Int, _ a: Float, _ b: Float)->VectorS<Float> {
-    let dest = VectorS<Float>(n)
+  public func gumbel(_ n:Int, _ a: Float, _ b: Float)->VectorP<Float> {
+    let dest = VectorP<Float>(n)
     gumbel(dest, a, b)
     return dest
   }
 
-  public func gaussianMulti(_ dest:VectorS<Float>, _ means:Array<Float>, _ stdevs:Array<Float>) {
+  public func gaussianMulti(_ dest:VectorP<Float>, _ means:Array<Float>, _ stdevs:Array<Float>) {
     vsRngGaussianMV(VSL_RNG_METHOD_GAUSSIAN_ICDF, stream.p, numericCast(dest.count/means.count),
       dest.p, numericCast(means.count), VSL_MATRIX_STORAGE_DIAGONAL, means, stdevs);
   }
-  public func gaussianMulti(_ n:Int, _ means:Array<Float>, _ stdevs:Array<Float>)->VectorS<Float> {
-    let dest = VectorS<Float>(n * means.count)
+  public func gaussianMulti(_ n:Int, _ means:Array<Float>, _ stdevs:Array<Float>)->VectorP<Float> {
+    let dest = VectorP<Float>(n * means.count)
     gaussianMulti(dest, means, stdevs)
     return dest
   }
-  public func gaussian(_ dest:VectorS<Double>, _ a: Double, _ b: Double) {
+  public func gaussian(_ dest:VectorP<Double>, _ a: Double, _ b: Double) {
     vdRngGaussian(VSL_RNG_METHOD_GAUSSIANMV_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func gaussian(_ n:Int, _ a: Double, _ b: Double)->VectorS<Double> {
-    let dest = VectorS<Double>(n)
+  public func gaussian(_ n:Int, _ a: Double, _ b: Double)->VectorP<Double> {
+    let dest = VectorP<Double>(n)
     gaussian(dest, a, b)
     return dest
   }
-  public func uniform(_ dest:VectorS<Double>, _ a: Double, _ b: Double) {
+  public func uniform(_ dest:VectorP<Double>, _ a: Double, _ b: Double) {
     vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, stream.p, dest.c, dest.p, a, b)
   }
-  public func uniform(_ n:Int, _ a: Double, _ b: Double)->VectorS<Double> {
-    let dest = VectorS<Double>(n)
+  public func uniform(_ n:Int, _ a: Double, _ b: Double)->VectorP<Double> {
+    let dest = VectorP<Double>(n)
     uniform(dest, a, b)
     return dest
   }
-  public func exponential(_ dest:VectorS<Double>, _ a: Double, _ b: Double) {
+  public func exponential(_ dest:VectorP<Double>, _ a: Double, _ b: Double) {
     vdRngExponential(VSL_RNG_METHOD_EXPONENTIAL_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func exponential(_ n:Int, _ a: Double, _ b: Double)->VectorS<Double> {
-    let dest = VectorS<Double>(n)
+  public func exponential(_ n:Int, _ a: Double, _ b: Double)->VectorP<Double> {
+    let dest = VectorP<Double>(n)
     exponential(dest, a, b)
     return dest
   }
-  public func laplace(_ dest:VectorS<Double>, _ a: Double, _ b: Double) {
+  public func laplace(_ dest:VectorP<Double>, _ a: Double, _ b: Double) {
     vdRngLaplace(VSL_RNG_METHOD_LAPLACE_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func laplace(_ n:Int, _ a: Double, _ b: Double)->VectorS<Double> {
-    let dest = VectorS<Double>(n)
+  public func laplace(_ n:Int, _ a: Double, _ b: Double)->VectorP<Double> {
+    let dest = VectorP<Double>(n)
     laplace(dest, a, b)
     return dest
   }
-  public func cauchy(_ dest:VectorS<Double>, _ a: Double, _ b: Double) {
+  public func cauchy(_ dest:VectorP<Double>, _ a: Double, _ b: Double) {
     vdRngCauchy(VSL_RNG_METHOD_CAUCHY_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func cauchy(_ n:Int, _ a: Double, _ b: Double)->VectorS<Double> {
-    let dest = VectorS<Double>(n)
+  public func cauchy(_ n:Int, _ a: Double, _ b: Double)->VectorP<Double> {
+    let dest = VectorP<Double>(n)
     cauchy(dest, a, b)
     return dest
   }
-  public func rayleigh(_ dest:VectorS<Double>, _ a: Double, _ b: Double) {
+  public func rayleigh(_ dest:VectorP<Double>, _ a: Double, _ b: Double) {
     vdRngRayleigh(VSL_RNG_METHOD_RAYLEIGH_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func rayleigh(_ n:Int, _ a: Double, _ b: Double)->VectorS<Double> {
-    let dest = VectorS<Double>(n)
+  public func rayleigh(_ n:Int, _ a: Double, _ b: Double)->VectorP<Double> {
+    let dest = VectorP<Double>(n)
     rayleigh(dest, a, b)
     return dest
   }
-  public func gumbel(_ dest:VectorS<Double>, _ a: Double, _ b: Double) {
+  public func gumbel(_ dest:VectorP<Double>, _ a: Double, _ b: Double) {
     vdRngGumbel(VSL_RNG_METHOD_GUMBEL_ICDF, stream.p, dest.c, dest.p, a, b)
   }
-  public func gumbel(_ n:Int, _ a: Double, _ b: Double)->VectorS<Double> {
-    let dest = VectorS<Double>(n)
+  public func gumbel(_ n:Int, _ a: Double, _ b: Double)->VectorP<Double> {
+    let dest = VectorP<Double>(n)
     gumbel(dest, a, b)
     return dest
   }
 
-  public func gaussianMulti(_ dest:VectorS<Double>, _ means:Array<Double>, _ stdevs:Array<Double>) {
+  public func gaussianMulti(_ dest:VectorP<Double>, _ means:Array<Double>, _ stdevs:Array<Double>) {
     vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIAN_ICDF, stream.p, numericCast(dest.count/means.count),
       dest.p, numericCast(means.count), VSL_MATRIX_STORAGE_DIAGONAL, means, stdevs);
   }
-  public func gaussianMulti(_ n:Int, _ means:Array<Double>, _ stdevs:Array<Double>)->VectorS<Double> {
-    let dest = VectorS<Double>(n * means.count)
+  public func gaussianMulti(_ n:Int, _ means:Array<Double>, _ stdevs:Array<Double>)->VectorP<Double> {
+    let dest = VectorP<Double>(n * means.count)
     gaussianMulti(dest, means, stdevs)
     return dest
   }

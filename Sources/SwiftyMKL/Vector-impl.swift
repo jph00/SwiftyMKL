@@ -3,25 +3,16 @@ import CMKL
 import CIPP
 
 
-public protocol Vector: BaseVector where Storage==ArrayStorage<Scalar>, Scalar:SupportsMKL { }
-
-public struct VectorS<T:SupportsMKL>: Vector {
-  public typealias Scalar=T
-  public var data:ArrayStorage<T>
-  public init(_ data_:ArrayStorage<T>) {data=data_}
-}
+infix operator .+:  AdditionPrecedence
+infix operator .+=: AssignmentPrecedence
+infix operator .-:  AdditionPrecedence
+infix operator .-=: AssignmentPrecedence
+infix operator .*:  MultiplicationPrecedence
+infix operator .*=: AssignmentPrecedence
+infix operator ./:  MultiplicationPrecedence
+infix operator ./=: AssignmentPrecedence
 
 extension Vector {
-  public var p:MutPtrT {get {return data.p}}
-  public var description: String { return "V\(Array(data).description)" }
-  public init(_ data:Array<Scalar>) {self.init(ArrayStorage<Scalar>(data))}
-  public init(_ count:Int) {self.init(ArrayStorage<Scalar>(count))}
-  public var alignment:Int {return data.alignment}
-
-  public func new(_ size:Int)  -> Self { return Self.init(ArrayStorage<Scalar>(size,  alignment:alignment)) }
-  public func new()  -> Self { return new(data.count) }
-  public func copy() -> Self { return Self.init(ArrayStorage<Scalar>(Array(data), alignment:alignment)) }
-
   func new_call(_ f:(Self)         ->()              )->Self { let res = new(); f(      res); return res }
   func new_call(_ f:(Self, Self)   ->(), _ b:Self    )->Self { let res = new(); f(b,    res); return res }
   func new_call<T>(_ f:(T, Self)   ->(), _ b:T       )->Self { let res = new(); f(b,    res); return res }
@@ -166,6 +157,9 @@ extension Vector {
   public func atan2_(_ b:Self) { atan2(b, self) }
   public func atan2(_ b:Self)->Self { return new_call(atan2, b) }
 
+  public func subCRev(_ b:Scalar, _ dest:Self) { Scalar.subCRev(p, b, dest.p, c) }
+  public func subCRev_(_ b:Scalar) { subCRev(b, self) }
+  public func subCRev(_ b:Scalar)->Self { return new_call(subCRev, b) }
   public func addC(_ b:Scalar, _ dest:Self) { Scalar.addC(p, b, dest.p, c) }
   public func addC_(_ b:Scalar) { addC(b, self) }
   public func addC(_ b:Scalar)->Self { return new_call(addC, b) }
@@ -198,24 +192,28 @@ extension Vector {
   public func powx_(_ b:Scalar) { powx(b, self) }
   public func powx(_ b:Scalar)->Self { return new_call(powx, b) }
 
-  public static func +  (lhs:Self, rhs:Self  ) -> Self { return lhs.add( rhs) }
-  public static func +  (lhs:Self, rhs:Scalar) -> Self { return lhs.addC( rhs) }
-  public static func += (lhs:Self, rhs:Self  )         { return lhs.add_(rhs) }
-  public static func += (lhs:Self, rhs:Scalar)         { return lhs.addC_(rhs) }
-  public static func -  (lhs:Self, rhs:Self  ) -> Self { return lhs.sub( rhs) }
-  public static func -  (lhs:Self, rhs:Scalar) -> Self { return lhs.subC( rhs) }
-  public static func -= (lhs:Self, rhs:Self  )         { return lhs.sub_(rhs) }
-  public static func -= (lhs:Self, rhs:Scalar)         { return lhs.subC_(rhs) }
-  public static func *  (lhs:Self, rhs:Self  ) -> Self { return lhs.mul( rhs) }
-  public static func *  (lhs:Self, rhs:Scalar) -> Self { return lhs.mulC( rhs) }
-  public static func *= (lhs:Self, rhs:Self  )         { return lhs.mul_(rhs) }
-  public static func *= (lhs:Self, rhs:Scalar)         { return lhs.mulC_(rhs) }
-  public static func /  (lhs:Self, rhs:Self  ) -> Self { return lhs.div( rhs) }
-  public static func /  (lhs:Self, rhs:Scalar) -> Self { return lhs.divC( rhs) }
-  public static func /= (lhs:Self, rhs:Self  )         { return lhs.div_(rhs) }
-  public static func /= (lhs:Self, rhs:Scalar)         { return lhs.divC_(rhs) }
-  public static func + (lhs:Scalar, rhs:Self) -> Self { return rhs.addC(lhs) }
-  public static func * (lhs:Scalar, rhs:Self) -> Self { return rhs.mulC(lhs) }
+  public static func .+  (lhs:Self, rhs:Self  ) -> Self { return lhs.add(  rhs) }
+  public static func .+  (lhs:Self, rhs:Scalar) -> Self { return lhs.addC( rhs) }
+  public static func .+= (lhs:Self, rhs:Self  )         {        lhs.add_( rhs) }
+  public static func .+= (lhs:Self, rhs:Scalar)         {        lhs.addC_(rhs) }
+  public static func .-  (lhs:Self, rhs:Self  ) -> Self { return lhs.sub(  rhs) }
+  public static func .-  (lhs:Self, rhs:Scalar) -> Self { return lhs.subC( rhs) }
+  public static func .-= (lhs:Self, rhs:Self  )         {        lhs.sub_( rhs) }
+  public static func .-= (lhs:Self, rhs:Scalar)         {        lhs.subC_(rhs) }
+  public static func .*  (lhs:Self, rhs:Self  ) -> Self { return lhs.mul(  rhs) }
+  public static func .*  (lhs:Self, rhs:Scalar) -> Self { return lhs.mulC( rhs) }
+  public static func .*= (lhs:Self, rhs:Self  )         {        lhs.mul_( rhs) }
+  public static func .*= (lhs:Self, rhs:Scalar)         {        lhs.mulC_(rhs) }
+  public static func ./  (lhs:Self, rhs:Self  ) -> Self { return lhs.div(  rhs) }
+  public static func ./  (lhs:Self, rhs:Scalar) -> Self { return lhs.divC( rhs) }
+  public static func ./= (lhs:Self, rhs:Self  )         {        lhs.div_( rhs) }
+  public static func ./= (lhs:Self, rhs:Scalar)         {        lhs.divC_(rhs) }
+  public static func .+  (lhs:Scalar, rhs:Self) -> Self { return rhs.addC(  lhs) }
+  public static func .+= (lhs:Scalar, rhs:Self)         {        rhs.addC_( lhs) }
+  public static func .-  (lhs:Scalar, rhs:Self) -> Self { return rhs.subCRev(  lhs) }
+  public static func .-= (lhs:Scalar, rhs:Self)         {        rhs.subCRev_( lhs) }
+  public static func .*  (lhs:Scalar, rhs:Self) -> Self { return rhs.mulC(  lhs) }
+  public static func .*= (lhs:Scalar, rhs:Self)         {        rhs.mulC_( lhs) }
 
   public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { Scalar.packI(numericCast(n), p+from, numericCast(incr), dest.p) }
   public func packIncrement(_ incr:Int, _ from:Int, _ n:Int)->Self {

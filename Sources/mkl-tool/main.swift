@@ -2,7 +2,7 @@ import Foundation
 import CoreFoundation
 import SwiftyMKL
 
-let a:VectorS<Float> = [1.0, 2, 3]
+let a:VectorP<Float> = [1.0, 2, 3]
 print(a.asum())
 
 IPP.setup()
@@ -18,13 +18,13 @@ func benchmark(title:String, f:()->()) {
     print("Time for \(title): \(time) s.")
 }
 
-typealias T = VectorS<Float>
-//typealias T = VectorS<Double>
+typealias T = VectorP<Float>
+//typealias T = VectorP<Double>
 let size = 1000000
 var ptr = T(size)
-ptr.data[3] = -1.2
-ptr.data[5] =  0.2
-let array = Array(ptr.data)
+ptr[3] = -1.2
+ptr[5] =  0.2
+let array = Array(ptr)
 
 var t = array.reduce(0.0, +)
 t = ptr.nrm2()

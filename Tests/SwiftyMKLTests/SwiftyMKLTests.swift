@@ -1,19 +1,17 @@
 import XCTest
 @testable import SwiftyMKL
 
-
 protocol TestProtocol {
-  associatedtype E:SupportsMKL
-  typealias T=VectorS<E>
+  associatedtype T:Vector
+  typealias E=T.Scalar
   var v1:T {get}
   var v2:T {get}
   var rng:RandDistrib {get}
   var z:E {get}
 }
 
-class SwiftyMKLTestsFloat: XCTestCase,TestProtocol {
-  typealias E=Float
-
+class SwiftyMKLTestsVectorPFloat: XCTestCase,TestProtocol {
+  typealias T=VectorP<Float>
   override class func setUp() {
     super.setUp()
     IPP.setup()
@@ -24,9 +22,32 @@ class SwiftyMKLTestsFloat: XCTestCase,TestProtocol {
   let rng = RandDistrib()
   let z:E = 0.0
 }
-class SwiftyMKLTestsDouble: XCTestCase,TestProtocol {
-  typealias E=Double
+class SwiftyMKLTestsArrayFloat: XCTestCase,TestProtocol {
+  typealias T=Array<Float>
+  override class func setUp() {
+    super.setUp()
+    IPP.setup()
+  }
 
+  let v1:T = [1.0, -2,  3, 0]
+  let v2:T = [0.5, 12, -2, 1]
+  let rng = RandDistrib()
+  let z:E = 0.0
+}
+class SwiftyMKLTestsVectorPDouble: XCTestCase,TestProtocol {
+  typealias T=VectorP<Double>
+  override class func setUp() {
+    super.setUp()
+    IPP.setup()
+  }
+
+  let v1:T = [1.0, -2,  3, 0]
+  let v2:T = [0.5, 12, -2, 1]
+  let rng = RandDistrib()
+  let z:E = 0.0
+}
+class SwiftyMKLTestsArrayDouble: XCTestCase,TestProtocol {
+  typealias T=Array<Double>
   override class func setUp() {
     super.setUp()
     IPP.setup()
@@ -63,7 +84,6 @@ extension TestProtocol {
     v1.abs(r2)
     XCTAssertEqual(r2, exp)
     v1.abs_()
-    print(v1)
     XCTAssertEqual(v1, exp)
   }
 
@@ -77,34 +97,53 @@ extension TestProtocol {
   func testAdd() {
     let exp = T(zip(v1,v2).map(+))
     let r1 = v1.add(v2)
-    XCTAssertEqual(r1, exp)
+    XCTAssertEqual(r1, exp, "add(v2)")
     let r2 = v1.copy()
     v1.add(v2, r2)
-    XCTAssertEqual(r2, exp)
-    let r3 = v1 + v2
-    XCTAssertEqual(r3, exp)
+    XCTAssertEqual(r2, exp, "add(v2,r2)")
+    let r3 = v1 .+ v2
+    XCTAssertEqual(r3, exp, "+")
     let r4 = v1.copy()
     r4.add_(v2)
-    XCTAssertEqual(r4, exp)
+    XCTAssertEqual(r4, exp, "add_")
     let r5 = v1.copy()
-    r5 += v2
-    XCTAssertEqual(r5, exp)
+    r5 .+= v2
+    XCTAssertEqual(r5, exp, "+=")
   }
 
   func testDivC() {
-    let exp = T(v1.map {$0/E(2.0)})
-    let r1 = v1.divC(E(2.0))
+    let v = E(2.0)
+    let exp = T(v1.map {$0/v})
+    let r1 = v1.divC(v)
     XCTAssertEqual(r1, exp)
     let r2 = v1.copy()
-    v1.divC(E(2.0), r2)
+    v1.divC(v, r2)
     XCTAssertEqual(r2, exp)
-    let r3 = v1 / E(2.0)
+    let r3 = v1 ./ v
     XCTAssertEqual(r3, exp)
     let r4 = v1.copy()
-    r4.divC_(E(2.0))
+    r4.divC_(v)
     XCTAssertEqual(r4, exp)
     let r5 = v1.copy()
-    r5 /= E(2.0)
+    r5 ./= v
+    XCTAssertEqual(r5, exp)
+  }
+
+  func testSubCRev() {
+    let v = E(2.0)
+    let exp = T(v1.map {v-$0})
+    let r1 = v1.subCRev(v)
+    XCTAssertEqual(r1, exp)
+    let r2 = v1.copy()
+    v1.subCRev(v, r2)
+    XCTAssertEqual(r2, exp)
+    let r3 = v .- v1 
+    XCTAssertEqual(r3, exp)
+    let r4 = v1.copy()
+    r4.subCRev_(v)
+    XCTAssertEqual(r4, exp)
+    let r5 = v1.copy()
+    v .-= r5
     XCTAssertEqual(r5, exp)
   }
 
@@ -166,13 +205,13 @@ extension TestProtocol {
     let r1 = v1.copy()
     XCTAssertEqual(r1, v1)
     r1.zero()
-    XCTAssertEqual(r1, v1*z)
+    XCTAssertEqual(r1, v1.*z)
   }
 
   func testSet() {
     let r1 = v1.copy()
     r1.set(E(2.0))
-    XCTAssertEqual(r1, v1*z+E(2.0))
+    XCTAssertEqual(r1, v1 .* z .+ E(2.0))
   }
 
   func testMove() {
@@ -226,3 +265,4 @@ extension TestProtocol {
   }
 
 }
+

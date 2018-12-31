@@ -10,8 +10,9 @@ types = ('Float', 'Double')
 }%
 
 % for t in types:
-extension SwiftyMKLTests${t} {
-  static var allTests : [(String, (SwiftyMKLTests${t})->()->())] {
+  % for s in ('VectorP', 'Array'):
+extension SwiftyMKLTests${s}${t} {
+  static var allTests : [(String, (SwiftyMKLTests${s}${t})->()->())] {
     return [
   % for n in names:
       ("${n}", ${n}),
@@ -19,11 +20,14 @@ extension SwiftyMKLTests${t} {
     ]
   }
 }
+  % end # s
 % end # t
 
 XCTMain([
 % for t in types:
-    testCase(SwiftyMKLTests${t}.allTests),
+  % for s in ('VectorP', 'Array'):
+    testCase(SwiftyMKLTests${s}${t}.allTests),
+  % end # s
 % end # t
 ])
 

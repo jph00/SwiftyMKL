@@ -57,22 +57,22 @@ struct RandDistrib {
 
 % for t,l in zip(types, 'sd'):
   % for lname,name,method in rng_defs:
-  public func ${lname}(_ dest:VectorS<${t}>, _ a: ${t}, _ b: ${t}) {
+  public func ${lname}(_ dest:VectorP<${t}>, _ a: ${t}, _ b: ${t}) {
     v${l}Rng${name}(${method}, stream.p, dest.c, dest.p, a, b)
   }
-  public func ${lname}(_ n:Int, _ a: ${t}, _ b: ${t})->VectorS<${t}> {
-    let dest = VectorS<${t}>(n)
+  public func ${lname}(_ n:Int, _ a: ${t}, _ b: ${t})->VectorP<${t}> {
+    let dest = VectorP<${t}>(n)
     ${lname}(dest, a, b)
     return dest
   }
   % end
 
-  public func gaussianMulti(_ dest:VectorS<${t}>, _ means:Array<${t}>, _ stdevs:Array<${t}>) {
+  public func gaussianMulti(_ dest:VectorP<${t}>, _ means:Array<${t}>, _ stdevs:Array<${t}>) {
     v${l}RngGaussianMV(VSL_RNG_METHOD_GAUSSIAN_ICDF, stream.p, numericCast(dest.count/means.count),
       dest.p, numericCast(means.count), VSL_MATRIX_STORAGE_DIAGONAL, means, stdevs);
   }
-  public func gaussianMulti(_ n:Int, _ means:Array<${t}>, _ stdevs:Array<${t}>)->VectorS<${t}> {
-    let dest = VectorS<${t}>(n * means.count)
+  public func gaussianMulti(_ n:Int, _ means:Array<${t}>, _ stdevs:Array<${t}>)->VectorP<${t}> {
+    let dest = VectorP<${t}>(n * means.count)
     gaussianMulti(dest, means, stdevs)
     return dest
   }

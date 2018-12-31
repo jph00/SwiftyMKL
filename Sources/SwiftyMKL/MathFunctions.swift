@@ -1,4 +1,4 @@
-import Foundation
+import Foundation 
 import CMKL
 import CIPP
 
@@ -104,6 +104,7 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   static func addC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32)
   static func mulC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32)
   static func subC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32)
+  static func subCRev(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32)
   static func divC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32)
   static func sum(_ pSrc:PtrT, _ len:Int32, _ pSum:MutPtrT)
   static func min(_ pSrc:PtrT, _ len:Int32, _ pMin:MutPtrT)
@@ -179,6 +180,7 @@ extension Float : SupportsMKL {
   public static func addC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsAddC_32f(pSrc,val,pDst,len) }
   public static func mulC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsMulC_32f(pSrc,val,pDst,len) }
   public static func subC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsSubC_32f(pSrc,val,pDst,len) }
+  public static func subCRev(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsSubCRev_32f(pSrc,val,pDst,len) }
   public static func divC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsDivC_32f(pSrc,val,pDst,len) }
   public static func sum(_ pSrc:PtrT, _ len:Int32, _ pSum:MutPtrT) { _=ippsSum_32f(pSrc,len,pSum,ippAlgHintFast) }
   public static func min(_ pSrc:PtrT, _ len:Int32, _ pMin:MutPtrT) { _=ippsMin_32f(pSrc,len,pMin) }
@@ -253,6 +255,7 @@ extension Double : SupportsMKL {
   public static func addC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsAddC_64f(pSrc,val,pDst,len) }
   public static func mulC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsMulC_64f(pSrc,val,pDst,len) }
   public static func subC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsSubC_64f(pSrc,val,pDst,len) }
+  public static func subCRev(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsSubCRev_64f(pSrc,val,pDst,len) }
   public static func divC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32) { _=ippsDivC_64f(pSrc,val,pDst,len) }
   public static func sum(_ pSrc:PtrT, _ len:Int32, _ pSum:MutPtrT) { _=ippsSum_64f(pSrc,len,pSum) }
   public static func min(_ pSrc:PtrT, _ len:Int32, _ pMin:MutPtrT) { _=ippsMin_64f(pSrc,len,pMin) }

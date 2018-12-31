@@ -1,15 +1,16 @@
 source_gybs := $(patsubst %.swift.gyb,%.swift,$(wildcard Sources/SwiftyMKL/*.swift.gyb))
-gybs := $(source_gybs) Tests/SwiftyMKLTests/SwiftyMKLTests.swift Tests/LinuxMain.swift
+conv_gybs := $(source_gybs) Tests/SwiftyMKLTests/SwiftyMKLTests.swift Tests/LinuxMain.swift
+sources := $(wildcard Sources/SwiftyMKL/*.swift) $(wildcard Tests/SwiftyMKLTests/*.swift) Tests/LinuxMain.swift $(conv_gybs)
 
 all: build
 
-run: $(gybs)
+run: $(sources)
 	swift run
 
-test: $(gybs)
+test: $(sources)
 	swift test
 
-build: $(gybs)
+build: $(sources)
 	swift build -v
 
 Tests/LinuxMain.swift: Tests/SwiftyMKLTests/SwiftyMKLTests.swift
@@ -25,5 +26,5 @@ Sources/SwiftyMKL/%.swift: Sources/SwiftyMKL/%.swift.gyb
 
 .PHONY: clean   
 clean:
-	rm -rf .build $(gybs)
+	rm -rf .build $(conv_gybs)
 
