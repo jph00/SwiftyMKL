@@ -3,6 +3,8 @@ import CoreFoundation
 import SwiftyMKL
 
 let a:VectorP<Float> = [1.0, 2, 3]
+print(a.count)
+print(a)
 print(a.asum())
 
 IPP.setup()

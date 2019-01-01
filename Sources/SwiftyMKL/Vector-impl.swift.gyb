@@ -18,67 +18,67 @@ extension Vector {
   func new_call<T>(_ f:(T, Self)->(), _ b:T, n:Int)->Self { let res = new(n); f(b, res); return res }
   func new_call<T>(_ f:(T, T, Self)->(), _ b:T, _ c:T, n:Int)->Self { let res = new(n); f(b, c, res); return res }
 
-  public func asum()->Scalar { return Scalar.asum(c, p, 1) }
-  public func nrm2()->Scalar { return Scalar.nrm2(c, p, 1) }
-  public func dot(_ b:Self)->Scalar { return Scalar.dot(c, p, 1, b.p, 1) }
-  public func set(_ b: Scalar) { Scalar.set(b, p, c) }
-  public func zero() { Scalar.zero(p, c) }
-  public func move(_ b:Self, _ n:Int) { Scalar.move(p, b.p, numericCast(n)) }
-  public func move(_ b:Self, _ n:Int, fromIdx:Int, toIdx:Int) { _=Scalar.move(p+fromIdx, b.p+toIdx, numericCast(n)) }
+  public func asum()->Element { return Element.asum(c, p, 1) }
+  public func nrm2()->Element { return Element.nrm2(c, p, 1) }
+  public func dot(_ b:Self)->Element { return Element.dot(c, p, 1, b.p, 1) }
+  public func set(_ b: Element) { Element.set(b, p, c) }
+  public func zero() { Element.zero(p, c) }
+  public func move(_ b:Self, _ n:Int) { Element.move(p, b.p, numericCast(n)) }
+  public func move(_ b:Self, _ n:Int, fromIdx:Int, toIdx:Int) { _=Element.move(p+fromIdx, b.p+toIdx, numericCast(n)) }
 
   % for o in map(lower1,vml1):
-  public func ${o}(_ dest: Self) { Scalar.${o}(c, p, dest.p) }
+  public func ${o}(_ dest: Self) { Element.${o}(c, p, dest.p) }
   public func ${o}_() { ${o}(self) }
   public func ${o}() -> Self  { return new_call(${o}) }
   % end # vml1
 
   % for o in map(lower1,vml2):
-  public func ${o}(_ b:Self, _ dest:Self) { Scalar.${o}(c, p, b.p, dest.p) }
+  public func ${o}(_ b:Self, _ dest:Self) { Element.${o}(c, p, b.p, dest.p) }
   public func ${o}_(_ b:Self) { ${o}(b, self) }
   public func ${o}(_ b:Self)->Self { return new_call(${o}, b) }
   % end # vml2
 
   % for o in map(lower1,ipp2):
-  public func ${o}(_ b:Scalar, _ dest:Self) { Scalar.${o}(p, b, dest.p, c) }
-  public func ${o}_(_ b:Scalar) { ${o}(b, self) }
-  public func ${o}(_ b:Scalar)->Self { return new_call(${o}, b) }
+  public func ${o}(_ b:Element, _ dest:Self) { Element.${o}(p, b, dest.p, c) }
+  public func ${o}_(_ b:Element) { ${o}(b, self) }
+  public func ${o}(_ b:Element)->Self { return new_call(${o}, b) }
   % end # ipp2
 
   // IPP convenience functions
-  typealias ippFuncReduce = (PtrT,Int32,MutPtrT)->()
-  func ipp_reduce(_ f:(MutPtrT)->())->Scalar { var res:Scalar=Scalar.init(); f(&res); return res }
-  func ipp_reduce(_ f:ippFuncReduce)->Scalar { return ipp_reduce({f(p, c, $0)}) }
+  typealias ippFuncReduce = (UnsafePointer<Element>,Int32,MutPtrT)->()
+  func ipp_reduce(_ f:(MutPtrT)->())->Element { var res:Element=Element.init(); f(&res); return res }
+  func ipp_reduce(_ f:ippFuncReduce)->Element { return ipp_reduce({f(p, c, $0)}) }
 
   % for o in map(lower1,ipp1):
-  public func ${o}()->Scalar { return ipp_reduce(Scalar.${o}) }
+  public func ${o}()->Element { return ipp_reduce(Element.${o}) }
   % end # ipp1
 
   % for o in map(lower1,ipp3):
-  public func ${o}(_ b:Self)->Scalar {return ipp_reduce({Scalar.${o}(p, b.p, c, $0)})}
+  public func ${o}(_ b:Self)->Element {return ipp_reduce({Element.${o}(p, b.p, c, $0)})}
   % end # ipp3
 
-  public func powx(_ b:Scalar, _ dest:Self) { Scalar.powx(c, p, b, dest.p) }
-  public func powx_(_ b:Scalar) { powx(b, self) }
-  public func powx(_ b:Scalar)->Self { return new_call(powx, b) }
+  public func powx(_ b:Element, _ dest:Self) { Element.powx(c, p, b, dest.p) }
+  public func powx_(_ b:Element) { powx(b, self) }
+  public func powx(_ b:Element)->Self { return new_call(powx, b) }
 
   % for op,f in zip('+-*/', 'add sub mul div'.split()):
   public static func .${op}  (lhs:Self, rhs:Self  ) -> Self { return lhs.${f}(  rhs) }
-  public static func .${op}  (lhs:Self, rhs:Scalar) -> Self { return lhs.${f}C( rhs) }
+  public static func .${op}  (lhs:Self, rhs:Element) -> Self { return lhs.${f}C( rhs) }
   public static func .${op}= (lhs:Self, rhs:Self  )         {        lhs.${f}_( rhs) }
-  public static func .${op}= (lhs:Self, rhs:Scalar)         {        lhs.${f}C_(rhs) }
+  public static func .${op}= (lhs:Self, rhs:Element)         {        lhs.${f}C_(rhs) }
   % end # op,f
   % for op,f in zip('+-*', 'addC subCRev mulC'.split()):
-  public static func .${op}  (lhs:Scalar, rhs:Self) -> Self { return rhs.${f}(  lhs) }
-  public static func .${op}= (lhs:Scalar, rhs:Self)         {        rhs.${f}_( lhs) }
+  public static func .${op}  (lhs:Element, rhs:Self) -> Self { return rhs.${f}(  lhs) }
+  public static func .${op}= (lhs:Element, rhs:Self)         {        rhs.${f}_( lhs) }
   % end # op,f
 
-  public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { Scalar.packI(numericCast(n), p+from, numericCast(incr), dest.p) }
+  public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { Element.packI(numericCast(n), p+from, numericCast(incr), dest.p) }
   public func packIncrement(_ incr:Int, _ from:Int, _ n:Int)->Self {
     let res = new(n); packIncrement(incr, from, n, res); return res
   }
-  public func packIndices(_ idxs:[Int32], _ dest:Self) { Scalar.packV(numericCast(idxs.count), p, idxs, dest.p) }
+  public func packIndices(_ idxs:[Int32], _ dest:Self) { Element.packV(numericCast(idxs.count), p, idxs, dest.p) }
   public func packIndices(_ idxs:[Int32])->Self { return new_call(packIndices, idxs, n:idxs.count) }
-  public func packMasked(_ mask:[Int32], _ dest:Self) { Scalar.packM(c, p, mask, dest.p) }
+  public func packMasked(_ mask:[Int32], _ dest:Self) { Element.packM(c, p, mask, dest.p) }
   public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:Int(mask.reduce(0,+))) }
 }
 
