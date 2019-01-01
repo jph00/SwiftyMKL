@@ -22,53 +22,65 @@ mkl1 = "asum nrm2 dot".split()
 # IPPAPI(IppStatus, ippsStdDev_32f, (const Ipp32f* pSrc, int len, Ipp32f* pStdDev, IppHintAlgorithm hint))
 ipp1 = "Sum Mean StdDev Max Min".split()
 # IPPAPI(IppStatus, ippsAddC_32f, (const Ipp32f* pSrc, Ipp32f val, Ipp32f* pDst, int len))
-ipp2 = "SubCRev AddC SubC MulC DivC".split()
+ipp2  = "SubCRev AddC SubC MulC DivC".split()
+# No 'C' needed in names in Swift, due to function overloading
+ipp2b = "SubRev  Add  Sub  Mul  Div ".split()
 # IPPAPI(IppStatus, ippsNormDiff_Inf_32f, (const Ipp32f* pSrc1, const Ipp32f* pSrc2, int len, Ipp32f* pNorm))
 ipp3 = "NormDiff_Inf NormDiff_L1 NormDiff_L2".split()
 vmls = vml1+vml2+"Powx PackI PackV PackM".split()
 mkls = mkl1
 ipps = ipp1+ipp2+ipp3 + "Set Zero Move".split()
 
+def word(name): return fr'(?P<{name}>[\w]+)'
 params_re = r'\((?P<ps>[^)]+)\)'
-func_re = r'(?P<f>[\w]+)'
-ret_re  = r'(?P<r>[\w]+)'
+func_re = word("f")
+ret_re  = word("r")
 l_re = r'(?P<l>[sd])'
-vml_re = fr"_Mkl_Api\({ret_re},v{l_re}{func_re},{params_re}\)"
-mkl_re = fr"{ret_re} cblas_{l_re}{func_re}{params_re}"
 n_re = r'(?P<l>32f|64f)'
-ipp_re = fr"IPPAPI\({ret_re}, ipps{func_re}_{n_re}, {params_re}\)"
+vml_re = re.compile(fr"_Mkl_Api\( *{ret_re}, *v{l_re}{func_re}, *{params_re}\)")
+mkl_re = re.compile(fr"{ret_re} cblas_{l_re}{func_re}{params_re}")
+ipp_re = re.compile(fr"IPPAPI\( *{ret_re}, *ipps{func_re}_{n_re}, *{params_re}\)")
 
-def param(p):
-    replace = (
-        (r'const float XX\[\]', 'PtrT'),
-        (r'const int XX\[\]', 'UnsafePointer<Int32>'),
-        (r'const MKL_INT XX\[\]', 'UnsafePointer<Int32>'),
-        (r'float XX\[\]', 'MutPtrT'),
-        (r'int XX\[\]', 'UnsafeMutablePointer<Int32>'),
-        (r'MKL_INT XX\[\]', 'UnsafeMutablePointer<Int32>'),
-        (r'const float \*XX', 'PtrT'),
-        (r'const float XX', 'T'),
-        (r'const Ipp32f\* XX', 'PtrT'),
-        (r'Ipp32f\* XX', 'MutPtrT'),
-        (r'Ipp32f XX', 'T'),
-        ('const MKL_INT XX', 'Int32'),
-        ('int XX', 'Int32'),
-        ('IppHintAlgorithm XX', 'IppHintAlgorithm'),
-    )
-    #if "ia[]" in p: set_trace()
-    for r1,r2 in replace:
-        r1 = re.sub('XX', r'([\w]+)', r1)
-        p = re.sub(r1, fr'\1:{r2}', p)
-    if ':' not in p: raise Exception(f"Unknown type in: {p}")
-    return p.split(':')
+param_re = re.compile(fr'(?P<const>const *)?{word("t")} *(?P<ptr>\*?) *{word("name")}(?P<arr>\[\])?')
+
+type_replace = dict(
+    MKL_INT='Int32',
+    double='Double',
+    float='Float',
+    Ipp32f='Float',
+    Ipp32s='Int32',
+    Ipp16s='Int16',
+    Ipp8s ='Int8',
+    Ipp32u='UInt32',
+    Ipp16u='UInt16',
+    Ipp8u ='UInt8',
+    int='Int32',
+    void='Void',
+)
+no_replace = set("CBLAS_LAYOUT CBLAS_TRANSPOSE CBLAS_UPLO CBLAS_DIAG CBLAS_SIDE CBLAS_IDENTIFIER IppHintAlgorithm".split())
+
+def c2swift(s):
+    m = param_re.search(s)
+    is_ptr = m.group('ptr') or m.group('arr')
+    t = m.group('t')
+    if t not in no_replace: t = type_replace[t]
+    if is_ptr:
+        if t=='Float':  t = f"{'PtrT'          if m.group('const') else 'MutPtrT'}"
+        elif t=='Void': t = 'UnsafeRawPointer'
+        else:           t = f"{'UnsafePointer' if m.group('const') else 'UnsafeMutablePointer'}<{t}>"
+    else:
+        if t=='Float': t = "T"
+    name = m.group('name')
+    return name,t
 
 def parse_h(h, inp_re):
     inp = re.sub(' +', ' ', h)
-    #print(inp)
     gs = re.search(inp_re, inp)
-    ps = gs.group('ps')
+    try: ps = gs.group('ps')
+    except: raise Exception(f"Failed parse:\n{inp}\n{inp_re}")
     ps = re.split(r', *', ps)
-    ps = [param(p) for p in ps]
+    try: ps = [c2swift(p) for p in ps]
+    except Exception as e: raise Exception(f"{e}:\n{inp}\n{param_re}")
     return gs, ps
 
 def param2str(ps):
@@ -81,7 +93,8 @@ def param2call(ps, t):
 
 def get_ret(r):
     if r in ('void','IppStatus'): return ''
-    if r.lower() in ("float","double"): r = "T"
+    if r not in no_replace: r = type_replace[r]
+    if r == "Float": r = "T"
     return f"->{r}"
 
 def parse_det(h, inp_re):
@@ -129,35 +142,36 @@ def test_parse() :
     ipp3_in = "IPPAPI(IppStatus, ippsNormDiff_Inf_32f,  (const Ipp32f* pSrc1, const Ipp32f* pSrc2, int len, Ipp32f* pNorm))"
     all_in = (vml1_in, vml2_in, mkl1_in, ipp1_in, ipp2_in, ipp3_in)
 
-    vml1_exp_decl = "log1p(_ n:Int32, _ a:PtrT, _ r:PtrT)"
-    vml2_exp_decl = "atan2(_ n:Int32, _ a:PtrT, _ b:PtrT, _ r:PtrT)"
+    vml1_exp_decl = "log1p(_ n:Int32, _ a:PtrT, _ r:MutPtrT)"
+    vml2_exp_decl = "atan2(_ n:Int32, _ a:PtrT, _ b:PtrT, _ r:MutPtrT)"
     mkl1_exp_decl = "asum(_ N:Int32, _ X:PtrT, _ incX:Int32)->T"
-    ipp1_exp_decl = "stdDev(_ pSrc:PtrT, _ len:Int32, _ pStdDev:MutPtrT)->IppStatus"
-    ipp2_exp_decl = "addC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32)->IppStatus"
-    ipp3_exp_decl = "normDiff_Inf(_ pSrc1:PtrT, _ pSrc2:PtrT, _ len:Int32, _ pNorm:MutPtrT)->IppStatus"
+    ipp1_exp_decl = "stdDev(_ pSrc:PtrT, _ len:Int32, _ pStdDev:MutPtrT)"
+    ipp2_exp_decl = "addC(_ pSrc:PtrT, _ val:T, _ pDst:MutPtrT, _ len:Int32)"
+    ipp3_exp_decl = "normDiff_Inf(_ pSrc1:PtrT, _ pSrc2:PtrT, _ len:Int32, _ pNorm:MutPtrT)"
     all_exp_decl = (vml1_exp_decl, vml2_exp_decl, mkl1_exp_decl, ipp1_exp_decl, ipp2_exp_decl, ipp3_exp_decl)
 
     vml1_exp_impl = "vsLog1p(n,a,r)"
     vml2_exp_impl = "vsAtan2(n,a,b,r)"
     mkl1_exp_impl = "return cblas_sasum(N,X,incX)"
-    ipp1_exp_impl =  "return ippsStdDev_32f(pSrc,len,pStdDev,hint)"
-    ipp1b_exp_impl = "return ippsStdDev_64f(pSrc,len,pStdDev)"
-    ipp2_exp_impl = "return ippsAddC_32f(pSrc,val,pDst,len)"
-    ipp3_exp_impl = "return ippsNormDiff_Inf_32f(pSrc1,pSrc2,len,pNorm)"
+    ipp1_exp_impl =  "_=ippsStdDev_32f(pSrc,len,pStdDev,ippAlgHintFast)"
+    ipp1b_exp_impl = "_=ippsStdDev_64f(pSrc,len,pStdDev)"
+    ipp2_exp_impl = "_=ippsAddC_32f(pSrc,val,pDst,len)"
+    ipp3_exp_impl = "_=ippsNormDiff_Inf_32f(pSrc1,pSrc2,len,pNorm)"
     all_exp_impl = (vml1_exp_impl, vml2_exp_impl, mkl1_exp_impl, ipp1_exp_impl, ipp2_exp_impl, ipp3_exp_impl)
 
-    res = [f(inp,"Float") for inp,f in
-           zip(all_in, [get_vml_impl,get_vml_impl,get_mkl_impl,get_ipp_impl,get_ipp_impl,get_ipp_impl])]
-    for a,b in zip(all_exp_impl, res):
-        print(a,b)
-        assert a==b
+    all_f = [get_vml_impl,get_vml_impl,get_mkl_impl,get_ipp_impl,get_ipp_impl,get_ipp_impl]
+    for i,f,exp in zip(all_in, all_f, all_exp_impl):
+        res = f(i, 'Float')
+        assert res==exp
     assert get_ipp_impl(ipp1_in, False) == ipp1b_exp_impl
 
-    res = [get_decl(inp,inp_re) for inp,inp_re in
-           zip(all_in, [vml_re,vml_re,mkl_re,ipp_re,ipp_re,ipp_re])]
-    for a,b in zip(all_exp_decl, res):
-        print(a,b)
-        assert a==b
+    all_re = [vml_re,vml_re,mkl_re,ipp_re,ipp_re,ipp_re]
+    for i,r,exp in zip(all_in, all_re, all_exp_decl):
+        res = get_decl(i,r)
+        assert res==exp
+
+    print("done")
+
 
 if __name__=='__main__': test_parse()
 

@@ -3,7 +3,7 @@ import XCTest
 
 protocol TestProtocol {
   associatedtype T:Vector
-  typealias E=T.Scalar
+  typealias E=T.Element
   var v1:T {get}
   var v2:T {get}
   var rng:RandDistrib {get}

@@ -21,7 +21,7 @@ Tests/%.swift: Tests/%.swift.gyb
 Tests/SwiftyMKL/%.swift: Tests/SwiftyMKL/%.swift.gyb
 	gyb --line-directive '' -o $@ $<
 
-Sources/SwiftyMKL/%.swift: Sources/SwiftyMKL/%.swift.gyb
+Sources/SwiftyMKL/%.swift: Sources/SwiftyMKL/%.swift.gyb funcs.py mkl_funcs.py
 	gyb --line-directive '' -o $@ $<
 
 .PHONY: clean   
