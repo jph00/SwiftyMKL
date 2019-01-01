@@ -1,3 +1,7 @@
+// This file shows a minimal sketch of how the main pieces fit together.
+// None of this file is actually used in the library. It's just here to make it easier to see what's going on
+//   and try different ideas out.
+
 // These 2 funcs are placeholders - actually would come from MKL
 func cblas_sasum(_ c:Int32, _ d:Array<Float >, _ n:Int32)->Float  { return d.reduce(0.0) {$0 + abs($1)} }
 func cblas_dasum(_ c:Int32, _ d:Array<Double>, _ n:Int32)->Double { return d.reduce(0.0) {$0 + abs($1)} }

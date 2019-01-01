@@ -1,3 +1,9 @@
+"""
+Read MKL headers and convert them in to a form usable in Swift.
+Uses hacky regexes. Would be better if it used a real parser.
+To support new types, edit the `replace` tuple below.
+"""
+
 from pdb import set_trace
 from mkl_funcs import *
 import re
