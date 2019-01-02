@@ -67,24 +67,10 @@ def c2swift(s):
     name = m.group('name')
     return name,t
 
-def param2str(ps):
-    res = [f'_ {n}:{t}' for n,t in ps if t != 'IppHintAlgorithm']
-    return ', '.join(res)
-
-def param2call(ps, t):
-    res = [f'{"ippAlgHintFast" if n=="hint" else n}' for n,ty in ps if (ty != 'IppHintAlgorithm') or (t=="Float")]
-    return ','.join(res)
-
-def get_ret(r):
-    if r in ('void','IppStatus'): return ''
-    if r not in no_replace: r = type_replace[r]
-    if r == "Float": r = "T"
-    return f"->{r}"
-
-def get_vml_name(n,t='Float'): return f'v{"s" if t=="Float" else "d"}{n}'
-def get_mkl_name(n,t='Float'): return f'cblas_{"s" if t=="Float" else "d"}{n}'
-def get_ipp_name(n,t='Float'): return f'ipps{n}_{"32f" if t=="Float" else "64f"}'
-name_lu = dict(vml=get_vml_name, cblas=get_mkl_name, ipp=get_ipp_name)
+def vml_name(n,t='Float'): return f'v{"s" if t=="Float" else "d"}{n}'
+def mkl_name(n,t='Float'): return f'cblas_{"s" if t=="Float" else "d"}{n}'
+def ipp_name(n,t='Float'): return f'ipps{n}_{"32f" if t=="Float" else "64f"}'
+name_lu = dict(vml=vml_name, cblas=mkl_name, ipp=ipp_name)
 
 class MklHeader():
     def __init__(self,h):
@@ -100,7 +86,6 @@ class MklHeader():
         if not parsed: raise Exception(f'Failed to match: {h}')
 
         ps,self.uname,self.ret,self.type = [parsed.group(o) for o in ("ps","f","r","l")]
-
         ps = re.split(r', *', ps)
         try: ps = [c2swift(p) for p in ps]
         except Exception as e: raise Exception(f"{e}:\n{inp}\n{param_re}")
@@ -109,12 +94,19 @@ class MklHeader():
         self.lname = lower1(self.uname)
 
     def decl(self,t):
-        ret = get_ret(self.ret)
-        pstr = param2str(self.params)
-        return f'{self.lname}({pstr}){ret}'
+        r = self.ret
+        if r in ('void','IppStatus'): r = ''
+        elif r not in no_replace: r = type_replace[r]
+        if r == "Float": r = "T"
+        if r: r = f"->{r}"
+        params = [f'_ {n}:{t}' for n,t in self.params if t != 'IppHintAlgorithm']
+        pstr = ', '.join(params)
+        return f'{self.lname}({pstr}){r}'
 
     def impl(self,t):
-        pstr = param2call(self.params, t)
+        params = [f'{"ippAlgHintFast" if n=="hint" else n}'
+                  for n,ty in self.params if (ty != 'IppHintAlgorithm') or (t=="Float")]
+        pstr = ','.join(params)
         if self.ret=='IppStatus': ret='_='
         elif self.ret and (self.ret != 'void'): ret='return '
         else: ret=''
@@ -159,7 +151,6 @@ def test_parse() :
     assert c.impl('Double') == ipp1b_exp_impl
 
     print("done")
-
 
 if __name__=='__main__': test_parse()
 
