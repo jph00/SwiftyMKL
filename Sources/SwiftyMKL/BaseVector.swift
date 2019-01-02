@@ -15,7 +15,7 @@ extension BaseVector {
 
   public func new(_ size:Int)->Self { return .init(size) }
   public func new()  -> Self { return new(count) }
-  public var c:Int32 {get {return numericCast(count)}}
+  public var c:Int {get {return count}}
 }
 
 public protocol ComposedStorage {

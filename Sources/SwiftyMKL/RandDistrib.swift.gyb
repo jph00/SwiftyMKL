@@ -1,7 +1,7 @@
 import CMKL
 
 // #defines from mkl_vsl_defines.h not auto-converted by swift
-let VSL_BRNG_INC = 1<<VSL_BRNG_SHIFT
+let VSL_BRNG_INC:Int32 = 1<<VSL_BRNG_SHIFT
 let VSL_BRNG_MCG31        = VSL_BRNG_INC
 let VSL_BRNG_R250         = VSL_BRNG_MCG31 + VSL_BRNG_INC
 let VSL_BRNG_MRG32K3A     = VSL_BRNG_R250 + VSL_BRNG_INC
@@ -20,9 +20,16 @@ let VSL_BRNG_ARS5         = VSL_BRNG_NONDETERM + VSL_BRNG_INC
 let VSL_BRNG_PHILOX4X32X10 = VSL_BRNG_ARS5 + VSL_BRNG_INC
 
 public class RandDistribStream {
-  var p:Optional<VSLStreamStatePtr>
-  public init() { vslNewStream(&p, 0, UInt32.random(in: 0..<UInt32.max)) }
-  deinit { vslDeleteStream(&p) }
+  var p:VSLStreamStatePtr
+  public init() {
+    var ptr:Optional<VSLStreamStatePtr>
+    vslNewStream(&ptr, VSL_BRNG_SFMT19937, UInt32.random(in: 0..<UInt32.max))
+    p = ptr!
+  }
+  deinit {
+    var ptr:Optional<VSLStreamStatePtr> = p
+    vslDeleteStream(&ptr)
+  }
 }
 
 %{
@@ -58,7 +65,7 @@ struct RandDistrib {
 % for t,l in zip(types, 'sd'):
   % for lname,name,method in rng_defs:
   public func ${lname}(_ dest:VectorP<${t}>, _ a: ${t}, _ b: ${t}) {
-    v${l}Rng${name}(${method}, stream.p, dest.c, dest.p, a, b)
+      _=${t}.rng${name}(${method}, stream.p, dest.c, dest.p, a, b)
   }
   public func ${lname}(_ n:Int, _ a: ${t}, _ b: ${t})->VectorP<${t}> {
     let dest = VectorP<${t}>(n)
@@ -68,8 +75,8 @@ struct RandDistrib {
   % end
 
   public func gaussianMulti(_ dest:VectorP<${t}>, _ means:Array<${t}>, _ stdevs:Array<${t}>) {
-    v${l}RngGaussianMV(VSL_RNG_METHOD_GAUSSIAN_ICDF, stream.p, numericCast(dest.count/means.count),
-      dest.p, numericCast(means.count), VSL_MATRIX_STORAGE_DIAGONAL, means, stdevs);
+    _=${t}.rngGaussianMV(VSL_RNG_METHOD_GAUSSIAN_ICDF, stream.p, dest.count/means.count,
+        dest.p, means.count, VSL_MATRIX_STORAGE_DIAGONAL, means, stdevs);
   }
   public func gaussianMulti(_ n:Int, _ means:Array<${t}>, _ stdevs:Array<${t}>)->VectorP<${t}> {
     let dest = VectorP<${t}>(n * means.count)

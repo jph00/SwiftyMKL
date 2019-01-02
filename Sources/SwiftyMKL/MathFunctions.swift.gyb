@@ -2,16 +2,21 @@ import Foundation
 import CMKL
 import CIPP
 
-%{ import sys; sys.path.append('../..'); from funcs import * }%
-
 %{
-# Functions with Float and Double specialized versions
+import sys; sys.path.append('../..')
+from funcs import *
+
+# Scalar functions with Float and Double specialized versions
 funcs1 = (('pow','Foundation'), ('min', 'Swift'), ('max', 'Swift'))
 # CGFloat unary functions
 funcs2 = """acos acosh asin asinh atan atanh cbrt cos cosh erf erfc exp exp2 expm1 j0 j1 log log10 log1p log2 logb
 nearbyint rint sin sinh tan tanh tgamma y0 y1""".split()
 # CGFloat binary functions
 funcs3 = "atan2 copysign fdim fmax fmin hypot nextafter".split()
+
+# Vector functions
+all_lines = cblas_lines+vml_lines+ipps_lines+rng_lines
+all_h = [MklHeader(o) for o in all_lines]
 }%
 
 public protocol SupportsMKL:BinaryFloatingPoint {
@@ -23,6 +28,7 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   init(_ value: Self)
   init()
   var cgfloat : CGFloat {get}
+
 % for f,_ in funcs1:
   func ${f}(_ b: Self) -> Self
 % end # f
@@ -30,16 +36,8 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   func ${f}() -> Self
 % end # f
 
-% for f in mkl_lines:
-  static func ${get_decl(f, mkl_re)}
-% end
-
-% for f in vml_lines:
-  static func ${get_decl(f, vml_re)}
-% end
-
-% for f in ipp_lines:
-  static func ${get_decl(f, ipp_re)}
+% for h in all_h:
+  static func ${h.decl()}
 % end
 }
 
@@ -51,16 +49,8 @@ extension ${t} : SupportsMKL {
   public func ${f}(_ b: ${t}) -> ${t} {return ${s}.${f}(self, b)}
   % end # f,s
 
-  % for f in mkl_lines:
-  public static func ${get_decl(f, mkl_re)} { ${get_mkl_impl(f,t)} }
-  % end
-
-  % for f in vml_lines:
-  public static func ${get_decl(f, vml_re)} { ${get_vml_impl(f,t)} }
-  % end
-
-  % for f in ipp_lines:
-  public static func ${get_decl(f, ipp_re)} { ${get_ipp_impl(f,t)} }
+  % for h in all_h:
+  public static func ${h.decl()} { ${h.impl(t)} }
   % end
 }
 % end # t

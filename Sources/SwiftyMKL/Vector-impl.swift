@@ -26,8 +26,8 @@ extension Vector {
   public func dot(_ b:Self)->Element { return Element.dot(c, p, 1, b.p, 1) }
   public func set(_ b: Element) { Element.set(b, p, c) }
   public func zero() { Element.zero(p, c) }
-  public func move(_ b:Self, _ n:Int) { Element.move(p, b.p, numericCast(n)) }
-  public func move(_ b:Self, _ n:Int, fromIdx:Int, toIdx:Int) { _=Element.move(p+fromIdx, b.p+toIdx, numericCast(n)) }
+  public func move(_ b:Self, _ n:Int) { Element.move(p, b.p, n) }
+  public func move(_ b:Self, _ n:Int, fromIdx:Int, toIdx:Int) { _=Element.move(p+fromIdx, b.p+toIdx, n) }
 
   public func ln(_ dest: Self) { Element.ln(c, p, dest.p) }
   public func ln_() { ln(self) }
@@ -174,7 +174,7 @@ extension Vector {
   public func divC(_ b:Element)->Self { return new_call(divC, b) }
 
   // IPP convenience functions
-  typealias ippFuncReduce = (UnsafePointer<Element>,Int32,MutPtrT)->()
+  typealias ippFuncReduce = (UnsafePointer<Element>,Int,MutPtrT)->()
   func ipp_reduce(_ f:(MutPtrT)->())->Element { var res:Element=Element.init(); f(&res); return res }
   func ipp_reduce(_ f:ippFuncReduce)->Element { return ipp_reduce({f(p, c, $0)}) }
 
@@ -215,11 +215,11 @@ extension Vector {
   public static func .*  (lhs:Element, rhs:Self) -> Self { return rhs.mulC(  lhs) }
   public static func .*= (lhs:Element, rhs:Self)         {        rhs.mulC_( lhs) }
 
-  public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { Element.packI(numericCast(n), p+from, numericCast(incr), dest.p) }
+  public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { Element.packI(n, p+from, incr, dest.p) }
   public func packIncrement(_ incr:Int, _ from:Int, _ n:Int)->Self {
     let res = new(n); packIncrement(incr, from, n, res); return res
   }
-  public func packIndices(_ idxs:[Int32], _ dest:Self) { Element.packV(numericCast(idxs.count), p, idxs, dest.p) }
+  public func packIndices(_ idxs:[Int32], _ dest:Self) { Element.packV(idxs.count, p, idxs, dest.p) }
   public func packIndices(_ idxs:[Int32])->Self { return new_call(packIndices, idxs, n:idxs.count) }
   public func packMasked(_ mask:[Int32], _ dest:Self) { Element.packM(c, p, mask, dest.p) }
   public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:Int(mask.reduce(0,+))) }
