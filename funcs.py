@@ -67,16 +67,6 @@ def c2swift(s):
     name = m.group('name')
     return name,t
 
-def parse_h(h, inp_re):
-    inp = re.sub(' +', ' ', h)
-    gs = re.search(inp_re, inp)
-    try: ps = gs.group('ps')
-    except: raise Exception(f"Failed parse:\n{inp}\n{inp_re}")
-    ps = re.split(r', *', ps)
-    try: ps = [c2swift(p) for p in ps]
-    except Exception as e: raise Exception(f"{e}:\n{inp}\n{param_re}")
-    return gs, ps
-
 def param2str(ps):
     res = [f'_ {n}:{t}' for n,t in ps if t != 'IppHintAlgorithm']
     return ', '.join(res)
@@ -91,43 +81,10 @@ def get_ret(r):
     if r == "Float": r = "T"
     return f"->{r}"
 
-def parse_det(h, inp_re):
-    gs,ps = parse_h(h, inp_re)
-    pstr = param2str(ps)
-    ret = get_ret(gs.group("r"))
-    uname = gs.group("f")
-    lname = lower1(uname)
-    return pstr,ret,uname,lname,gs
-
-def get_decl(h, inp_re):
-    pstr,ret,uname,lname,gs = parse_det(h, inp_re)
-    return f'{lname}({pstr}){ret}'
-
-def parse_call(h, inp_re, t):
-    gs,ps = parse_h(h, inp_re)
-    pstr = param2call(ps, t)
-    ret = get_ret(gs.group("r"))
-    if ret: ret='return '
-    uname = gs.group("f")
-    lname = lower1(uname)
-    return pstr,ret,uname,lname,gs
-
 def get_vml_name(n,t='Float'): return f'v{"s" if t=="Float" else "d"}{n}'
 def get_mkl_name(n,t='Float'): return f'cblas_{"s" if t=="Float" else "d"}{n}'
 def get_ipp_name(n,t='Float'): return f'ipps{n}_{"32f" if t=="Float" else "64f"}'
 name_lu = dict(vml=get_vml_name, cblas=get_mkl_name, ipp=get_ipp_name)
-
-def get_vml_impl(h,t):
-    pstr,ret,uname,lname,gs = parse_call(h, vml_re, t)
-    return f'{ret}{get_vml_name(uname,t)}({pstr})'
-
-def get_mkl_impl(h,t):
-    pstr,ret,uname,lname,gs = parse_call(h, mkl_re, t)
-    return f'{ret}{get_mkl_name(uname,t)}({pstr})'
-
-def get_ipp_impl(h,t):
-    pstr,ret,uname,lname,gs = parse_call(h, ipp_re, t)
-    return f'_={get_ipp_name(uname,t)}({pstr})'
 
 class MklHeader():
     def __init__(self,h):
@@ -200,17 +157,6 @@ def test_parse() :
     c = MklHeader(ipp1_in)
     assert c.decl('Double') == ipp1_exp_decl
     assert c.impl('Double') == ipp1b_exp_impl
-
-    all_f = [get_vml_impl,get_vml_impl,get_mkl_impl,get_ipp_impl,get_ipp_impl,get_ipp_impl]
-    for i,f,exp in zip(all_in, all_f, all_exp_impl):
-        res = f(i, 'Float')
-        assert res==exp
-    assert get_ipp_impl(ipp1_in, False) == ipp1b_exp_impl
-
-    all_re = [vml_re,vml_re,mkl_re,ipp_re,ipp_re,ipp_re]
-    for i,r,exp in zip(all_in, all_re, all_exp_decl):
-        res = get_decl(i,r)
-        assert res==exp
 
     print("done")
 
