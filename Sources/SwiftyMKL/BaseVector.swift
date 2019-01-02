@@ -6,8 +6,8 @@ public protocol BaseVector: RandomAccessCollection, MutableCollection, Expressib
   func new(_ size:Int)->Self
   func copy()->Self
   var p:UnsafeMutablePointer<Element> {get}
-  var count:Int {get}
 }
+
 extension BaseVector {
   public init(arrayLiteral data: Element...) { self.init(data) }
   public var indices: Range<Int> { return 0..<endIndex }

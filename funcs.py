@@ -45,17 +45,11 @@ param_re = re.compile(fr'(?P<const>const *)?{word("t")} *(?P<ptr>\*?) *{word("na
 
 type_replace = dict(
     MKL_INT='Int32',
-    double='Double',
-    float='Float',
-    Ipp32f='Float',
-    Ipp32s='Int32',
-    Ipp16s='Int16',
-    Ipp8s ='Int8',
-    Ipp32u='UInt32',
-    Ipp16u='UInt16',
-    Ipp8u ='UInt8',
-    int='Int32',
-    void='Void',
+    double='Double', float='Float',
+    Ipp64f='Double', Ipp32f='Float',
+    Ipp32s='Int32', Ipp16s='Int16', Ipp8s ='Int8', Ipp32u='UInt32',
+    Ipp32u='Int64', Ipp16u='UInt16', Ipp8u ='UInt8', int='Int32',
+    void='Void'
 )
 no_replace = set("CBLAS_LAYOUT CBLAS_TRANSPOSE CBLAS_UPLO CBLAS_DIAG CBLAS_SIDE CBLAS_IDENTIFIER IppHintAlgorithm".split())
 
@@ -119,19 +113,56 @@ def parse_call(h, inp_re, t):
     return pstr,ret,uname,lname,gs
 
 def get_vml_name(n,t='Float'): return f'v{"s" if t=="Float" else "d"}{n}'
+def get_mkl_name(n,t='Float'): return f'cblas_{"s" if t=="Float" else "d"}{n}'
+def get_ipp_name(n,t='Float'): return f'ipps{n}_{"32f" if t=="Float" else "64f"}'
+name_lu = dict(vml=get_vml_name, mkl=get_mkl_name, ipp=get_ipp_name)
+
 def get_vml_impl(h,t):
     pstr,ret,uname,lname,gs = parse_call(h, vml_re, t)
     return f'{ret}{get_vml_name(uname,t)}({pstr})'
 
-def get_mkl_name(n,t='Float'): return f'cblas_{"s" if t=="Float" else "d"}{n}'
 def get_mkl_impl(h,t):
     pstr,ret,uname,lname,gs = parse_call(h, mkl_re, t)
     return f'{ret}{get_mkl_name(uname,t)}({pstr})'
 
-def get_ipp_name(n,t='Float'): return f'ipps{n}_{"32f" if t=="Float" else "64f"}'
 def get_ipp_impl(h,t):
     pstr,ret,uname,lname,gs = parse_call(h, ipp_re, t)
     return f'_={get_ipp_name(uname,t)}({pstr})'
+
+class MklHeader():
+    def __init__(self,h):
+        inp = re.sub(' +', ' ', h)
+        self.source = 'cblas'
+        parsed = re.search(mkl_re, h)
+        if not parsed:
+            self.source = 'ipp'
+            parsed = re.search(ipp_re, h)
+        if not parsed:
+            self.source = 'vml'
+            parsed = re.search(vml_re, h)
+        if not parsed: raise Exception(f'Failed to match: {h}')
+
+        ps,self.uname,self.ret,self.type = [parsed.group(o) for o in "ps","f","r","l"]
+
+        ps = re.split(r', *', ps)
+        try: ps = [c2swift(p) for p in ps]
+        except Exception as e: raise Exception(f"{e}:\n{inp}\n{param_re}")
+        self.parsed = parsed
+        self.params = ps
+        self.lname = lower1(uname)
+
+    def decl(t):
+        ret = get_ret(self.ret)
+        pstr = param2call(self.params, t)
+        return f'{self.lname}({pstr}){ret}'
+
+    def impl(t)
+        pstr = param2call(self.params, t)
+        if self.ret=='IppStatus': ret='_='
+        elif self.ret: ret='return '
+        else ret=''
+        f_name = name_lu[self.source]
+        return f'{ret}{f_name(self.uname,t)}({pstr})'
 
 def test_parse() :
     vml1_in = "_Mkl_Api(void,vsLog1p,(const MKL_INT n,  const float  a[], float  r[]))"
@@ -159,6 +190,15 @@ def test_parse() :
     ipp3_exp_impl = "_=ippsNormDiff_Inf_32f(pSrc1,pSrc2,len,pNorm)"
     all_exp_impl = (vml1_exp_impl, vml2_exp_impl, mkl1_exp_impl, ipp1_exp_impl, ipp2_exp_impl, ipp3_exp_impl)
 
+    for inp,decl,impl in zip(all_in, all_exp_decl, all_exp_impl):
+        c = MklHeader(inp)
+        assert c.decl('Float') == decl
+        assert c.impl('Float') == impl
+
+    c = MklHeader(ipp1_in)
+    assert c.decl('Double') == ipp1_exp_decl
+    assert c.impl('Double') == ipp1b_exp_impl
+
     all_f = [get_vml_impl,get_vml_impl,get_mkl_impl,get_ipp_impl,get_ipp_impl,get_ipp_impl]
     for i,f,exp in zip(all_in, all_f, all_exp_impl):
         res = f(i, 'Float')
@@ -169,6 +209,8 @@ def test_parse() :
     for i,r,exp in zip(all_in, all_re, all_exp_decl):
         res = get_decl(i,r)
         assert res==exp
+
+    assert get_ipp_impl(ipp1_in, False) == ipp1b_exp_impl
 
     print("done")
 
