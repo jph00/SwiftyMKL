@@ -1,6 +1,7 @@
 import Foundation
 
 public protocol Vector: BaseVector, Equatable, CustomStringConvertible where Element:SupportsMKL {
+  typealias PtrT = UnsafePointer<Element>
   typealias MutPtrT = UnsafeMutablePointer<Element>
 }
 

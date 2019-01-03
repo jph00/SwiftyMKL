@@ -2,7 +2,12 @@ import Foundation
 import CMKL
 import CIPP
 
-%{ import sys; sys.path.append('../..'); from funcs import * }%
+%{
+import sys; sys.path.append('../..');
+from funcs import *
+all_lines = sm_lines+cblas_lines+vml_lines+ipps_lines+rng_lines
+all_h = [MklHeader(o) for o in all_lines]
+}%
 
 % for op,p in zip('+-*/', ['AdditionPrecedence']*2 + ['MultiplicationPrecedence']*2):
 infix operator .${op}:  ${p}
@@ -10,6 +15,10 @@ infix operator .${op}=: AssignmentPrecedence
 % end
 
 extension Vector {
+% for h in all_h:
+  ${h.impl_all_inst()}
+% end
+
   func new_call(_ f:(Self)         ->()              )->Self { let res = new(); f(      res); return res }
   func new_call(_ f:(Self, Self)   ->(), _ b:Self    )->Self { let res = new(); f(b,    res); return res }
   func new_call<T>(_ f:(T, Self)   ->(), _ b:T       )->Self { let res = new(); f(b,    res); return res }
@@ -18,28 +27,28 @@ extension Vector {
   func new_call<T>(_ f:(T, Self)->(), _ b:T, n:Int)->Self { let res = new(n); f(b, res); return res }
   func new_call<T>(_ f:(T, T, Self)->(), _ b:T, _ c:T, n:Int)->Self { let res = new(n); f(b, c, res); return res }
 
-  public func asum()->Element { return Element.asum(c, p, 1) }
-  public func nrm2()->Element { return Element.nrm2(c, p, 1) }
-  public func dot(_ b:Self)->Element { return Element.dot(c, p, 1, b.p, 1) }
-  public func set(_ b: Element) { Element.set(b, p, c) }
-  public func zero() { Element.zero(p, c) }
+  public func asum()->Element { return asum_cblas(1) }
+  public func nrm2()->Element { return nrm2_cblas(1) }
+  public func dot(_ b:Self)->Element { return dot_cblas(1, b.p, 1) }
+  public func set(_ b: Element) { set(b,p) }
+  public func zero() { zero(p) }
   public func move(_ b:Self, _ n:Int) { Element.move(p, b.p, n) }
   public func move(_ b:Self, _ n:Int, fromIdx:Int, toIdx:Int) { _=Element.move(p+fromIdx, b.p+toIdx, n) }
 
   % for o in map(lower1,vml1):
-  public func ${o}(_ dest: Self) { Element.${o}(c, p, dest.p) }
+  public func ${o}(_ dest: Self) { ${o}_vml(dest.p) }
   public func ${o}_() { ${o}(self) }
   public func ${o}() -> Self  { return new_call(${o}) }
   % end # vml1
 
   % for o in map(lower1,vml2):
-  public func ${o}(_ b:Self, _ dest:Self) { Element.${o}(c, p, b.p, dest.p) }
+  public func ${o}(_ b:Self, _ dest:Self) { ${o}_vml(b.p, dest.p) }
   public func ${o}_(_ b:Self) { ${o}(b, self) }
   public func ${o}(_ b:Self)->Self { return new_call(${o}, b) }
   % end # vml2
 
   % for o in map(lower1,ipp2):
-  public func ${o}(_ b:Element, _ dest:Self) { Element.${o}(p, b, dest.p, c) }
+  public func ${o}(_ b:Element, _ dest:Self) { ${o}(b, dest.p) }
   public func ${o}_(_ b:Element) { ${o}(b, self) }
   public func ${o}(_ b:Element)->Self { return new_call(${o}, b) }
   % end # ipp2
@@ -50,14 +59,14 @@ extension Vector {
   func ipp_reduce(_ f:ippFuncReduce)->Element { return ipp_reduce({f(p, c, $0)}) }
 
   % for o in map(lower1,ipp1):
-  public func ${o}()->Element { return ipp_reduce(Element.${o}) }
+  public func ${o}()->Element { return ipp_reduce(${o}) }
   % end # ipp1
 
   % for o in map(lower1,ipp3):
-  public func ${o}(_ b:Self)->Element {return ipp_reduce({Element.${o}(p, b.p, c, $0)})}
+  public func ${o}(_ b:Self)->Element {return ipp_reduce({${o}(b.p, $0)})}
   % end # ipp3
 
-  public func powx(_ b:Element, _ dest:Self) { Element.powx(c, p, b, dest.p) }
+  public func powx(_ b:Element, _ dest:Self) { powx_vml(b, dest.p) }
   public func powx_(_ b:Element) { powx(b, self) }
   public func powx(_ b:Element)->Self { return new_call(powx, b) }
 
@@ -67,9 +76,8 @@ extension Vector {
   public static func .${op}= (lhs:Self, rhs:Self  )         {        lhs.${f}_( rhs) }
   public static func .${op}= (lhs:Self, rhs:Element)         {        lhs.${f}C_(rhs) }
   % end # op,f
-  % for op,f in zip('+-*', 'addC subCRev mulC'.split()):
+  % for op,f in zip('+-*/', 'addC subCRev mulC divCRev'.split()):
   public static func .${op}  (lhs:Element, rhs:Self) -> Self { return rhs.${f}(  lhs) }
-  public static func .${op}= (lhs:Element, rhs:Self)         {        rhs.${f}_( lhs) }
   % end # op,f
 
   public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { Element.packI(n, p+from, incr, dest.p) }
