@@ -9,11 +9,6 @@ all_lines = sm_lines+cblas_lines+vml_lines+ipps_lines+rng_lines
 all_h = [MklHeader(o) for o in all_lines]
 }%
 
-% for op,p in zip('+-*/', ['AdditionPrecedence']*2 + ['MultiplicationPrecedence']*2):
-infix operator .${op}:  ${p}
-infix operator .${op}=: AssignmentPrecedence
-% end
-
 extension Vector {
 % for h in all_h:
   ${h.impl_all_inst()}
@@ -68,14 +63,9 @@ extension Vector {
   public static func ${op}  (lhs:Self, rhs:Element) -> Self { return lhs.${f}C( rhs) }
   public static func ${op}= (lhs:Self, rhs:Self  )         {        lhs.${f}_( rhs) }
   public static func ${op}= (lhs:Self, rhs:Element)         {        lhs.${f}C_(rhs) }
-  public static func .${op}  (lhs:Self, rhs:Self  ) -> Self { return lhs.${f}(  rhs) }
-  public static func .${op}  (lhs:Self, rhs:Element) -> Self { return lhs.${f}C( rhs) }
-  public static func .${op}= (lhs:Self, rhs:Self  )         {        lhs.${f}_( rhs) }
-  public static func .${op}= (lhs:Self, rhs:Element)         {        lhs.${f}C_(rhs) }
   % end # op,f
   % for op,f in zip('+-*/', 'addC subCRev mulC divCRev'.split()):
   public static func ${op}  (lhs:Element, rhs:Self) -> Self { return rhs.${f}(  lhs) }
-  public static func .${op}  (lhs:Element, rhs:Self) -> Self { return rhs.${f}(  lhs) }
   % end # op,f
 
   public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { Element.packI(n, p+from, incr, dest.p) }
@@ -87,4 +77,12 @@ extension Vector {
   public func packMasked(_ mask:[Int32], _ dest:Self) { Element.packM(c, p, mask, dest.p) }
   public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:Int(mask.reduce(0,+))) }
 }
+
+/*
+// Currently unused
+% for op,p in zip('+-*/', ['AdditionPrecedence']*2 + ['MultiplicationPrecedence']*2):
+infix operator .${op}:  ${p}
+infix operator .${op}=: AssignmentPrecedence
+% end
+*/
 

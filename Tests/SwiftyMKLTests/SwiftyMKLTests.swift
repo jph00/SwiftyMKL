@@ -101,7 +101,7 @@ extension TestProtocol {
     let r2 = v1.copy()
     v1.add(v2, r2)
     XCTAssertEqual(r2, exp, "add(v2,r2)")
-    let r3 = v1 .+ v2
+    let r3 = v1 + v2
     XCTAssertEqual(r3, exp, "+")
     let r4 = v1.copy()
     r4.add_(v2)
@@ -137,7 +137,7 @@ extension TestProtocol {
     let r2 = v1.copy()
     v1.subCRev(v, r2)
     XCTAssertEqual(r2, exp)
-    let r3 = v .- v1 
+    let r3 = v - v1 
     XCTAssertEqual(r3, exp)
     let r4 = v1.copy()
     r4.subCRev_(v)
@@ -202,13 +202,13 @@ extension TestProtocol {
     let r1 = v1.copy()
     XCTAssertEqual(r1, v1)
     r1.zero()
-    XCTAssertEqual(r1, v1.*z)
+    XCTAssertEqual(r1, v1*z)
   }
 
   func testSet() {
     let r1 = v1.copy()
     r1.set(E(2.0))
-    XCTAssertEqual(r1, v1 .* z .+ E(2.0))
+    XCTAssertEqual(r1, v1 * z + E(2.0))
   }
 
   func testMove() {

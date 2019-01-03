@@ -3,15 +3,6 @@ import CMKL
 import CIPP
 
 
-infix operator .+:  AdditionPrecedence
-infix operator .+=: AssignmentPrecedence
-infix operator .-:  AdditionPrecedence
-infix operator .-=: AssignmentPrecedence
-infix operator .*:  MultiplicationPrecedence
-infix operator .*=: AssignmentPrecedence
-infix operator ./:  MultiplicationPrecedence
-infix operator ./=: AssignmentPrecedence
-
 extension Vector {
   public func divCRev(_ val:Element, _ pDst:Self) {return Element.divCRev(self.p,val,pDst.p,self.c)}
   public func dot(_ incX:Int, _ Y:Self, _ incY:Int)->Element {return Element.dot(self.c,self.p,incX,Y.p,incY)}
@@ -353,42 +344,22 @@ extension Vector {
   public static func +  (lhs:Self, rhs:Element) -> Self { return lhs.addC( rhs) }
   public static func += (lhs:Self, rhs:Self  )         {        lhs.add_( rhs) }
   public static func += (lhs:Self, rhs:Element)         {        lhs.addC_(rhs) }
-  public static func .+  (lhs:Self, rhs:Self  ) -> Self { return lhs.add(  rhs) }
-  public static func .+  (lhs:Self, rhs:Element) -> Self { return lhs.addC( rhs) }
-  public static func .+= (lhs:Self, rhs:Self  )         {        lhs.add_( rhs) }
-  public static func .+= (lhs:Self, rhs:Element)         {        lhs.addC_(rhs) }
   public static func -  (lhs:Self, rhs:Self  ) -> Self { return lhs.sub(  rhs) }
   public static func -  (lhs:Self, rhs:Element) -> Self { return lhs.subC( rhs) }
   public static func -= (lhs:Self, rhs:Self  )         {        lhs.sub_( rhs) }
   public static func -= (lhs:Self, rhs:Element)         {        lhs.subC_(rhs) }
-  public static func .-  (lhs:Self, rhs:Self  ) -> Self { return lhs.sub(  rhs) }
-  public static func .-  (lhs:Self, rhs:Element) -> Self { return lhs.subC( rhs) }
-  public static func .-= (lhs:Self, rhs:Self  )         {        lhs.sub_( rhs) }
-  public static func .-= (lhs:Self, rhs:Element)         {        lhs.subC_(rhs) }
   public static func *  (lhs:Self, rhs:Self  ) -> Self { return lhs.mul(  rhs) }
   public static func *  (lhs:Self, rhs:Element) -> Self { return lhs.mulC( rhs) }
   public static func *= (lhs:Self, rhs:Self  )         {        lhs.mul_( rhs) }
   public static func *= (lhs:Self, rhs:Element)         {        lhs.mulC_(rhs) }
-  public static func .*  (lhs:Self, rhs:Self  ) -> Self { return lhs.mul(  rhs) }
-  public static func .*  (lhs:Self, rhs:Element) -> Self { return lhs.mulC( rhs) }
-  public static func .*= (lhs:Self, rhs:Self  )         {        lhs.mul_( rhs) }
-  public static func .*= (lhs:Self, rhs:Element)         {        lhs.mulC_(rhs) }
   public static func /  (lhs:Self, rhs:Self  ) -> Self { return lhs.div(  rhs) }
   public static func /  (lhs:Self, rhs:Element) -> Self { return lhs.divC( rhs) }
   public static func /= (lhs:Self, rhs:Self  )         {        lhs.div_( rhs) }
   public static func /= (lhs:Self, rhs:Element)         {        lhs.divC_(rhs) }
-  public static func ./  (lhs:Self, rhs:Self  ) -> Self { return lhs.div(  rhs) }
-  public static func ./  (lhs:Self, rhs:Element) -> Self { return lhs.divC( rhs) }
-  public static func ./= (lhs:Self, rhs:Self  )         {        lhs.div_( rhs) }
-  public static func ./= (lhs:Self, rhs:Element)         {        lhs.divC_(rhs) }
   public static func +  (lhs:Element, rhs:Self) -> Self { return rhs.addC(  lhs) }
-  public static func .+  (lhs:Element, rhs:Self) -> Self { return rhs.addC(  lhs) }
   public static func -  (lhs:Element, rhs:Self) -> Self { return rhs.subCRev(  lhs) }
-  public static func .-  (lhs:Element, rhs:Self) -> Self { return rhs.subCRev(  lhs) }
   public static func *  (lhs:Element, rhs:Self) -> Self { return rhs.mulC(  lhs) }
-  public static func .*  (lhs:Element, rhs:Self) -> Self { return rhs.mulC(  lhs) }
   public static func /  (lhs:Element, rhs:Self) -> Self { return rhs.divCRev(  lhs) }
-  public static func ./  (lhs:Element, rhs:Self) -> Self { return rhs.divCRev(  lhs) }
 
   public func packIncrement(_ incr:Int, _ from:Int, _ n:Int, _ dest:Self) { Element.packI(n, p+from, incr, dest.p) }
   public func packIncrement(_ incr:Int, _ from:Int, _ n:Int)->Self {
@@ -399,4 +370,16 @@ extension Vector {
   public func packMasked(_ mask:[Int32], _ dest:Self) { Element.packM(c, p, mask, dest.p) }
   public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:Int(mask.reduce(0,+))) }
 }
+
+/*
+// Currently unused
+infix operator .+:  AdditionPrecedence
+infix operator .+=: AssignmentPrecedence
+infix operator .-:  AdditionPrecedence
+infix operator .-=: AssignmentPrecedence
+infix operator .*:  MultiplicationPrecedence
+infix operator .*=: AssignmentPrecedence
+infix operator ./:  MultiplicationPrecedence
+infix operator ./=: AssignmentPrecedence
+*/
 
