@@ -112,7 +112,7 @@ extension TestProtocol {
   }
 
   func testDivC() {
-    let v = E(2.0)
+    let v:E = 2.0
     let exp = T(v1.map {$0/v})
     let r1 = v1.divC(v)
     XCTAssertEqual(r1, exp)
@@ -130,7 +130,7 @@ extension TestProtocol {
   }
 
   func testSubCRev() {
-    let v = E(2.0)
+    let v:E = 2.0
     let exp = T(v1.map {v-$0})
     let r1 = v1.subCRev(v)
     XCTAssertEqual(r1, exp)
@@ -146,13 +146,13 @@ extension TestProtocol {
 
 
   func testPowx() {
-    let exp = T(v1.map {$0.pow(E(2.0))})
-    let r1 = v1.powx(E(2.0))
+    let exp = T(v1.map {$0.pow(2.0)})
+    let r1 = v1.powx(2.0)
     XCTAssertEqual(r1, exp)
     let r2 = v1.copy()
-    v1.powx(E(2.0), r2)
+    v1.powx(2.0, r2)
     XCTAssertEqual(r2, exp)
-    v1.powx_(E(2.0))
+    v1.powx_(2.0)
     XCTAssertEqual(v1, exp)
   }
 
@@ -207,24 +207,17 @@ extension TestProtocol {
 
   func testSet() {
     let r1 = v1.copy()
-    r1.set(E(2.0))
-    XCTAssertEqual(r1, v1 * z + E(2.0))
+    r1.set(2.0)
+    XCTAssertEqual(r1, v1*z+2.0)
   }
 
   func testMove() {
     let r1 = v1.copy()
     v2.move(r1, 2)
-    XCTAssertEqual(r1[0], v2[0])
-    XCTAssertEqual(r1[1], v2[1])
-    XCTAssertEqual(r1[2], v1[2])
-    XCTAssertEqual(r1[3], v1[3])
-
+    XCTAssertEqual(r1, T([v2[0],v2[1],v1[2],v1[3]]))
     let r2 = v1.copy()
     r2.move(r2, 2, fromIdx:1, toIdx:2)
-    XCTAssertEqual(r2[0], v1[0])
-    XCTAssertEqual(r2[1], v1[1])
-    XCTAssertEqual(r2[2], v1[1])
-    XCTAssertEqual(r2[3], v1[2])
+    XCTAssertEqual(r2, T([v1[0],v1[1],v1[1],v1[2]]))
   }
 
   func testGaussian() {
