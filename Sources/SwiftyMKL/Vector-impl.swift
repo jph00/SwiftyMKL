@@ -340,21 +340,21 @@ extension Vector {
   public func powx_(_ b:Element) { powx(b, self) }
   public func powx(_ b:Element)->Self { return new_call(powx, b) }
 
-  public static func +  (lhs:Self, rhs:Self  ) -> Self { return lhs.add(  rhs) }
+  public static func +  (lhs:Self, rhs:Self   ) -> Self { return lhs.add(  rhs) }
   public static func +  (lhs:Self, rhs:Element) -> Self { return lhs.addC( rhs) }
-  public static func += (lhs:Self, rhs:Self  )         {        lhs.add_( rhs) }
+  public static func += (lhs:Self, rhs:Self   )         {        lhs.add_( rhs) }
   public static func += (lhs:Self, rhs:Element)         {        lhs.addC_(rhs) }
-  public static func -  (lhs:Self, rhs:Self  ) -> Self { return lhs.sub(  rhs) }
+  public static func -  (lhs:Self, rhs:Self   ) -> Self { return lhs.sub(  rhs) }
   public static func -  (lhs:Self, rhs:Element) -> Self { return lhs.subC( rhs) }
-  public static func -= (lhs:Self, rhs:Self  )         {        lhs.sub_( rhs) }
+  public static func -= (lhs:Self, rhs:Self   )         {        lhs.sub_( rhs) }
   public static func -= (lhs:Self, rhs:Element)         {        lhs.subC_(rhs) }
-  public static func *  (lhs:Self, rhs:Self  ) -> Self { return lhs.mul(  rhs) }
+  public static func *  (lhs:Self, rhs:Self   ) -> Self { return lhs.mul(  rhs) }
   public static func *  (lhs:Self, rhs:Element) -> Self { return lhs.mulC( rhs) }
-  public static func *= (lhs:Self, rhs:Self  )         {        lhs.mul_( rhs) }
+  public static func *= (lhs:Self, rhs:Self   )         {        lhs.mul_( rhs) }
   public static func *= (lhs:Self, rhs:Element)         {        lhs.mulC_(rhs) }
-  public static func /  (lhs:Self, rhs:Self  ) -> Self { return lhs.div(  rhs) }
+  public static func /  (lhs:Self, rhs:Self   ) -> Self { return lhs.div(  rhs) }
   public static func /  (lhs:Self, rhs:Element) -> Self { return lhs.divC( rhs) }
-  public static func /= (lhs:Self, rhs:Self  )         {        lhs.div_( rhs) }
+  public static func /= (lhs:Self, rhs:Self   )         {        lhs.div_( rhs) }
   public static func /= (lhs:Self, rhs:Element)         {        lhs.divC_(rhs) }
   public static func +  (lhs:Element, rhs:Self) -> Self { return rhs.addC(  lhs) }
   public static func -  (lhs:Element, rhs:Self) -> Self { return rhs.subCRev(  lhs) }
@@ -366,9 +366,9 @@ extension Vector {
     let res = new(n); packIncrement(incr, from, n, res); return res
   }
   public func packIndices(_ idxs:[Int32], _ dest:Self) { Element.packV(idxs.count, p, idxs, dest.p) }
+  public func packMasked( _ mask:[Int32], _ dest:Self) { Element.packM(mask.count, p, mask, dest.p) }
   public func packIndices(_ idxs:[Int32])->Self { return new_call(packIndices, idxs, n:idxs.count) }
-  public func packMasked(_ mask:[Int32], _ dest:Self) { Element.packM(c, p, mask, dest.p) }
-  public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:Int(mask.reduce(0,+))) }
+  public func packMasked( _ mask:[Int32])->Self { return new_call(packMasked,  mask, n:Int(mask.reduce(0,+))) }
 }
 
 /*

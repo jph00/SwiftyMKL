@@ -59,9 +59,9 @@ extension Vector {
   public func powx(_ b:Element)->Self { return new_call(powx, b) }
 
   % for op,f in zip('+-*/', 'add sub mul div'.split()):
-  public static func ${op}  (lhs:Self, rhs:Self  ) -> Self { return lhs.${f}(  rhs) }
+  public static func ${op}  (lhs:Self, rhs:Self   ) -> Self { return lhs.${f}(  rhs) }
   public static func ${op}  (lhs:Self, rhs:Element) -> Self { return lhs.${f}C( rhs) }
-  public static func ${op}= (lhs:Self, rhs:Self  )         {        lhs.${f}_( rhs) }
+  public static func ${op}= (lhs:Self, rhs:Self   )         {        lhs.${f}_( rhs) }
   public static func ${op}= (lhs:Self, rhs:Element)         {        lhs.${f}C_(rhs) }
   % end # op,f
   % for op,f in zip('+-*/', 'addC subCRev mulC divCRev'.split()):
@@ -73,9 +73,9 @@ extension Vector {
     let res = new(n); packIncrement(incr, from, n, res); return res
   }
   public func packIndices(_ idxs:[Int32], _ dest:Self) { Element.packV(idxs.count, p, idxs, dest.p) }
+  public func packMasked( _ mask:[Int32], _ dest:Self) { Element.packM(mask.count, p, mask, dest.p) }
   public func packIndices(_ idxs:[Int32])->Self { return new_call(packIndices, idxs, n:idxs.count) }
-  public func packMasked(_ mask:[Int32], _ dest:Self) { Element.packM(c, p, mask, dest.p) }
-  public func packMasked(_ mask:[Int32])->Self { return new_call(packMasked, mask, n:Int(mask.reduce(0,+))) }
+  public func packMasked( _ mask:[Int32])->Self { return new_call(packMasked,  mask, n:Int(mask.reduce(0,+))) }
 }
 
 /*
