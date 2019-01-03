@@ -81,7 +81,7 @@ def get_call(n,ty):
     return n
 
 names_c = "N n len".split() # Int32
-names_p = "X a pSrc pSrc1".split() # PtrT
+names_p = "X a pSrc pSrc1 A".split() # PtrT
 names_d = "r pDst y".split() # MutPtrT (also can be p{Name})
 
 class MklHeader():
@@ -109,18 +109,18 @@ class MklHeader():
         self.params = ps
         self.lname = lower1(self.uname)
 
-    def decl(self, skips=None, suf=''):
+    def decl(self, skips=None):
         r = self.ret
         if r in ('void','IppStatus'): r = ''
         elif r not in no_replace: r = type_replace[r]
         if r == "Float": r = "Element"
         if r: r = f"->{r}"
         params = self.params
-        if skips: params = [o for i,o in enumerate(params) if i not in skips]
+        if skips:
+            params = [(n,'Self' if 'PtrT' in t else t) for i,(n,t) in enumerate(params) if i not in skips]
         params = [f'_ {n}:{t}' for n,t in params if t != 'IppHintAlgorithm']
         pstr = ', '.join(params)
-        name = self.lname + suf
-        return f'{name}({pstr}){r}'
+        return f'{self.lname}({pstr}){r}'
 
     def impl(self,t):
         params = [get_call(n,ty) for n,ty in self.params]
@@ -143,14 +143,14 @@ class MklHeader():
     def decl_inst(self):
         pidx,cidx = self.find_p(),self.find_c()
         if pidx is None and cidx is None: return None
-        suf=''
-        if self.source not in ('ipp','sm'): suf = f'_{self.source}'
-        return self.decl((pidx,cidx), suf)
+        return self.decl((pidx,cidx))
 
     def impl_inst(self):
         pidx,cidx = self.find_p(),self.find_c()
         if pidx is None and cidx is None: return None
+        ptrs = [i for i,o in enumerate(self.params) if 'PtrT' in o[1]]
         params = [o for o,_ in self.params]
+        for i in ptrs: params[i] = f'{params[i]}.p'
         if pidx is not None: params[pidx]='self.p'
         if cidx is not None: params[cidx]='self.c'
         params = [o for o in params if o!='hint']
@@ -207,9 +207,9 @@ def test_parse() :
     assert res == ipp1b_exp_impl, f'{res}\n{ipp1b_exp_impl}'
 
     print("done")
-    #all_lines = sm_lines+cblas_lines+vml_lines+ipps_lines+rng_lines
-    #all_h = [MklHeader(o) for o in all_lines]
-    #print([(o.source,o.h) for o in all_h if o.lname=='abs'])
+    all_lines = sm_lines+cblas_lines+vml_lines+ipps_lines+rng_lines
+    all_h = [MklHeader(o) for o in all_lines]
+    print([(o.source,o.h) for o in all_h if o.lname=='abs'])
 
 if __name__=='__main__': test_parse()
 

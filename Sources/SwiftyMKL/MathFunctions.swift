@@ -185,21 +185,12 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   static func vectorJaehne(_ pDst:MutPtrT, _ len:Int, _ magn:Element)
   static func vectorSlope(_ pDst:MutPtrT, _ len:Int, _ offset:Element, _ slope:Element)
   static func addC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
-  static func add(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int)
   static func addProductC(_ pSrc:PtrT, _ val:Element, _ pSrcDst:MutPtrT, _ len:Int)
   static func addProduct(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pSrcDst:MutPtrT, _ len:Int)
   static func mulC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
-  static func mul(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int)
   static func subC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
   static func subCRev(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
-  static func sub(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int)
   static func divC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
-  static func div(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int)
-  static func abs(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int)
-  static func sqr(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int)
-  static func sqrt(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int)
-  static func exp(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int)
-  static func ln(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int)
   static func sumLn(_ pSrc:PtrT, _ len:Int, _ pSum:MutPtrT)
   static func arctan(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int)
   static func normalize(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int, _ vSub:Element, _ vDiv:Element)
@@ -250,14 +241,6 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   static func sampleUp(_ pSrc:PtrT, _ srcLen:Int, _ pDst:MutPtrT, _ pDstLen:UnsafeMutablePointer<Int32>, _ factor:Int, _ pPhase:UnsafeMutablePointer<Int32>)
   static func sampleDown(_ pSrc:PtrT, _ srcLen:Int, _ pDst:MutPtrT, _ pDstLen:UnsafeMutablePointer<Int32>, _ factor:Int, _ pPhase:UnsafeMutablePointer<Int32>)
   static func filterMedian(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int, _ maskSize:Int, _ pDlySrc:PtrT, _ pDlyDst:MutPtrT, _ pBuffer:UnsafeMutablePointer<UInt8>)
-  static func floor(_ a:PtrT, _ r:MutPtrT, _ n:Int)
-  static func ceil(_ a:PtrT, _ r:MutPtrT, _ n:Int)
-  static func trunc(_ a:PtrT, _ r:MutPtrT, _ n:Int)
-  static func round(_ a:PtrT, _ r:MutPtrT, _ n:Int)
-  static func rint(_ a:PtrT, _ r:MutPtrT, _ n:Int)
-  static func nearbyInt(_ a:PtrT, _ r:MutPtrT, _ n:Int)
-  static func modf(_ a:PtrT, _ r1:MutPtrT, _ r2:MutPtrT, _ n:Int)
-  static func frac(_ a:PtrT, _ r:MutPtrT, _ n:Int)
   static func rngCauchy(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32
   static func rngUniform(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32
   static func rngGaussian(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32
@@ -416,21 +399,12 @@ extension Float : SupportsMKL {
   public static func vectorJaehne(_ pDst:MutPtrT, _ len:Int, _ magn:Element) {_=ippsVectorJaehne_32f(pDst,numericCast(len),magn)}
   public static func vectorSlope(_ pDst:MutPtrT, _ len:Int, _ offset:Element, _ slope:Element) {_=ippsVectorSlope_32f(pDst,numericCast(len),offset,slope)}
   public static func addC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsAddC_32f(pSrc,val,pDst,numericCast(len))}
-  public static func add(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsAdd_32f(pSrc1,pSrc2,pDst,numericCast(len))}
   public static func addProductC(_ pSrc:PtrT, _ val:Element, _ pSrcDst:MutPtrT, _ len:Int) {_=ippsAddProductC_32f(pSrc,val,pSrcDst,numericCast(len))}
   public static func addProduct(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pSrcDst:MutPtrT, _ len:Int) {_=ippsAddProduct_32f(pSrc1,pSrc2,pSrcDst,numericCast(len))}
   public static func mulC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsMulC_32f(pSrc,val,pDst,numericCast(len))}
-  public static func mul(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsMul_32f(pSrc1,pSrc2,pDst,numericCast(len))}
   public static func subC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsSubC_32f(pSrc,val,pDst,numericCast(len))}
   public static func subCRev(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsSubCRev_32f(pSrc,val,pDst,numericCast(len))}
-  public static func sub(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsSub_32f(pSrc1,pSrc2,pDst,numericCast(len))}
   public static func divC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsDivC_32f(pSrc,val,pDst,numericCast(len))}
-  public static func div(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsDiv_32f(pSrc1,pSrc2,pDst,numericCast(len))}
-  public static func abs(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsAbs_32f(pSrc,pDst,numericCast(len))}
-  public static func sqr(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsSqr_32f(pSrc,pDst,numericCast(len))}
-  public static func sqrt(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsSqrt_32f(pSrc,pDst,numericCast(len))}
-  public static func exp(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsExp_32f(pSrc,pDst,numericCast(len))}
-  public static func ln(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsLn_32f(pSrc,pDst,numericCast(len))}
   public static func sumLn(_ pSrc:PtrT, _ len:Int, _ pSum:MutPtrT) {_=ippsSumLn_32f(pSrc,numericCast(len),pSum)}
   public static func arctan(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsArctan_32f(pSrc,pDst,numericCast(len))}
   public static func normalize(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int, _ vSub:Element, _ vDiv:Element) {_=ippsNormalize_32f(pSrc,pDst,numericCast(len),vSub,vDiv)}
@@ -481,14 +455,6 @@ extension Float : SupportsMKL {
   public static func sampleUp(_ pSrc:PtrT, _ srcLen:Int, _ pDst:MutPtrT, _ pDstLen:UnsafeMutablePointer<Int32>, _ factor:Int, _ pPhase:UnsafeMutablePointer<Int32>) {_=ippsSampleUp_32f(pSrc,numericCast(srcLen),pDst,pDstLen,numericCast(factor),pPhase)}
   public static func sampleDown(_ pSrc:PtrT, _ srcLen:Int, _ pDst:MutPtrT, _ pDstLen:UnsafeMutablePointer<Int32>, _ factor:Int, _ pPhase:UnsafeMutablePointer<Int32>) {_=ippsSampleDown_32f(pSrc,numericCast(srcLen),pDst,pDstLen,numericCast(factor),pPhase)}
   public static func filterMedian(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int, _ maskSize:Int, _ pDlySrc:PtrT, _ pDlyDst:MutPtrT, _ pBuffer:UnsafeMutablePointer<UInt8>) {_=ippsFilterMedian_32f(pSrc,pDst,numericCast(len),numericCast(maskSize),pDlySrc,pDlyDst,pBuffer)}
-  public static func floor(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsFloor_32f(a,r,numericCast(n))}
-  public static func ceil(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsCeil_32f(a,r,numericCast(n))}
-  public static func trunc(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsTrunc_32f(a,r,numericCast(n))}
-  public static func round(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsRound_32f(a,r,numericCast(n))}
-  public static func rint(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsRint_32f(a,r,numericCast(n))}
-  public static func nearbyInt(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsNearbyInt_32f(a,r,numericCast(n))}
-  public static func modf(_ a:PtrT, _ r1:MutPtrT, _ r2:MutPtrT, _ n:Int) {_=ippsModf_32f(a,r1,r2,numericCast(n))}
-  public static func frac(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsFrac_32f(a,r,numericCast(n))}
   public static func rngCauchy(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32 {return vsRngCauchy(method,stream,numericCast(n),r,a,b)}
   public static func rngUniform(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32 {return vsRngUniform(method,stream,numericCast(n),r,a,b)}
   public static func rngGaussian(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32 {return vsRngGaussian(method,stream,numericCast(n),r,a,b)}
@@ -646,21 +612,12 @@ extension Double : SupportsMKL {
   public static func vectorJaehne(_ pDst:MutPtrT, _ len:Int, _ magn:Element) {_=ippsVectorJaehne_64f(pDst,numericCast(len),magn)}
   public static func vectorSlope(_ pDst:MutPtrT, _ len:Int, _ offset:Element, _ slope:Element) {_=ippsVectorSlope_64f(pDst,numericCast(len),offset,slope)}
   public static func addC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsAddC_64f(pSrc,val,pDst,numericCast(len))}
-  public static func add(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsAdd_64f(pSrc1,pSrc2,pDst,numericCast(len))}
   public static func addProductC(_ pSrc:PtrT, _ val:Element, _ pSrcDst:MutPtrT, _ len:Int) {_=ippsAddProductC_64f(pSrc,val,pSrcDst,numericCast(len))}
   public static func addProduct(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pSrcDst:MutPtrT, _ len:Int) {_=ippsAddProduct_64f(pSrc1,pSrc2,pSrcDst,numericCast(len))}
   public static func mulC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsMulC_64f(pSrc,val,pDst,numericCast(len))}
-  public static func mul(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsMul_64f(pSrc1,pSrc2,pDst,numericCast(len))}
   public static func subC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsSubC_64f(pSrc,val,pDst,numericCast(len))}
   public static func subCRev(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsSubCRev_64f(pSrc,val,pDst,numericCast(len))}
-  public static func sub(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsSub_64f(pSrc1,pSrc2,pDst,numericCast(len))}
   public static func divC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsDivC_64f(pSrc,val,pDst,numericCast(len))}
-  public static func div(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsDiv_64f(pSrc1,pSrc2,pDst,numericCast(len))}
-  public static func abs(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsAbs_64f(pSrc,pDst,numericCast(len))}
-  public static func sqr(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsSqr_64f(pSrc,pDst,numericCast(len))}
-  public static func sqrt(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsSqrt_64f(pSrc,pDst,numericCast(len))}
-  public static func exp(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsExp_64f(pSrc,pDst,numericCast(len))}
-  public static func ln(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsLn_64f(pSrc,pDst,numericCast(len))}
   public static func sumLn(_ pSrc:PtrT, _ len:Int, _ pSum:MutPtrT) {_=ippsSumLn_64f(pSrc,numericCast(len),pSum)}
   public static func arctan(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int) {_=ippsArctan_64f(pSrc,pDst,numericCast(len))}
   public static func normalize(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int, _ vSub:Element, _ vDiv:Element) {_=ippsNormalize_64f(pSrc,pDst,numericCast(len),vSub,vDiv)}
@@ -711,14 +668,6 @@ extension Double : SupportsMKL {
   public static func sampleUp(_ pSrc:PtrT, _ srcLen:Int, _ pDst:MutPtrT, _ pDstLen:UnsafeMutablePointer<Int32>, _ factor:Int, _ pPhase:UnsafeMutablePointer<Int32>) {_=ippsSampleUp_64f(pSrc,numericCast(srcLen),pDst,pDstLen,numericCast(factor),pPhase)}
   public static func sampleDown(_ pSrc:PtrT, _ srcLen:Int, _ pDst:MutPtrT, _ pDstLen:UnsafeMutablePointer<Int32>, _ factor:Int, _ pPhase:UnsafeMutablePointer<Int32>) {_=ippsSampleDown_64f(pSrc,numericCast(srcLen),pDst,pDstLen,numericCast(factor),pPhase)}
   public static func filterMedian(_ pSrc:PtrT, _ pDst:MutPtrT, _ len:Int, _ maskSize:Int, _ pDlySrc:PtrT, _ pDlyDst:MutPtrT, _ pBuffer:UnsafeMutablePointer<UInt8>) {_=ippsFilterMedian_64f(pSrc,pDst,numericCast(len),numericCast(maskSize),pDlySrc,pDlyDst,pBuffer)}
-  public static func floor(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsFloor_64f(a,r,numericCast(n))}
-  public static func ceil(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsCeil_64f(a,r,numericCast(n))}
-  public static func trunc(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsTrunc_64f(a,r,numericCast(n))}
-  public static func round(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsRound_64f(a,r,numericCast(n))}
-  public static func rint(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsRint_64f(a,r,numericCast(n))}
-  public static func nearbyInt(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsNearbyInt_64f(a,r,numericCast(n))}
-  public static func modf(_ a:PtrT, _ r1:MutPtrT, _ r2:MutPtrT, _ n:Int) {_=ippsModf_64f(a,r1,r2,numericCast(n))}
-  public static func frac(_ a:PtrT, _ r:MutPtrT, _ n:Int) {_=ippsFrac_64f(a,r,numericCast(n))}
   public static func rngCauchy(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32 {return vdRngCauchy(method,stream,numericCast(n),r,a,b)}
   public static func rngUniform(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32 {return vdRngUniform(method,stream,numericCast(n),r,a,b)}
   public static func rngGaussian(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32 {return vdRngGaussian(method,stream,numericCast(n),r,a,b)}

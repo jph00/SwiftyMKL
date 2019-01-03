@@ -107,7 +107,7 @@ extension TestProtocol {
     r4.add_(v2)
     XCTAssertEqual(r4, exp, "add_")
     let r5 = v1.copy()
-    r5 .+= v2
+    r5 += v2
     XCTAssertEqual(r5, exp, "+=")
   }
 
@@ -119,13 +119,13 @@ extension TestProtocol {
     let r2 = v1.copy()
     v1.divC(v, r2)
     XCTAssertEqual(r2, exp)
-    let r3 = v1 ./ v
+    let r3 = v1 / v
     XCTAssertEqual(r3, exp)
     let r4 = v1.copy()
     r4.divC_(v)
     XCTAssertEqual(r4, exp)
     let r5 = v1.copy()
-    r5 ./= v
+    r5 /= v
     XCTAssertEqual(r5, exp)
   }
 
@@ -141,21 +141,6 @@ extension TestProtocol {
     XCTAssertEqual(r3, exp)
     let r4 = v1.copy()
     r4.subCRev_(v)
-    XCTAssertEqual(r4, exp)
-  }
-
-  func testDivCRev() {
-    let v = E(2.0)
-    let exp = T(v1.map {v/$0})
-    let r1 = v1.divCRev(v)
-    XCTAssertEqual(r1, exp)
-    let r2 = v1.copy()
-    v1.divCRev(v, r2)
-    XCTAssertEqual(r2, exp)
-    let r3 = v ./ v1 
-    XCTAssertEqual(r3, exp)
-    let r4 = v1.copy()
-    r4.divCRev_(v)
     XCTAssertEqual(r4, exp)
   }
 
