@@ -20,28 +20,38 @@ func benchmark(title:String, f:()->()) {
     print("Time for \(title): \(time) s.")
 }
 
-typealias E=Float
+public typealias E=Float
 //typealias E=Double
 typealias T = VectorP<E>
 let size = 1000000
 var ptr = T(size)
 ptr[3] = -1.2
 ptr[5] =  0.2
+var ptr2 = ptr.copy()
 var array = Array(ptr)
+var ar2 = Array(ptr)
 
 var t = array.reduce(0.0, +)
 var a1:E=0
 var a2:E=0
 t = ptr.nrm2()
-benchmark(title:"ipp") {a1 = ptr.nrm2()}
-benchmark(title:"reduce") {a2 = array.reduce(0.0, {$0 + $1*$1}).squareRoot()}
+benchmark(title:"ipp nrm2") {a1 = ptr.nrm2()}
+benchmark(title:"reduce nrm2") {a2 = array.reduce(0.0, {$0 + $1*$1}).squareRoot()}
 print(a1)
 print(a2)
 
-benchmark(title:"ipp/") {ptr.divCRev(2.0, ptr)}
-benchmark(title:"reduce/") {
-  for i in 0..<array.count { array[i] = 2.0/array[i] }
+benchmark(title:"sm divCRev") {ptr.divCRev(2.0, ptr2)}
+print(ptr2.min())
+benchmark(title:"closure divCRev") {
+  for i in 0..<array.count { ar2[i] = 2.0/array[i] }
 }
-print(ptr.min())
-print(array.min())
+print(ar2.min())
+
+//@inlinable
+func doit(_ n:Int, _ p1:UnsafeMutablePointer<E>, _ p2:UnsafeMutablePointer<E>) {
+  for i in 0..<n { p1[i] = 2.0/p1[i] }
+}
+benchmark(title:"ptr divCRev") { divCRev(ptr.count, ptr.p, 2.0, ptr2.p) }
+benchmark(title:"ptr divCRev2") { divCRev(ptr, 2.0, ptr2) }
+print(ptr2.min())
 

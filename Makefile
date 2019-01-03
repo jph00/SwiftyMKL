@@ -5,6 +5,7 @@ headers := $(wildcard all_%.h)
 
 all: build
 
+#-Xswiftc -Ounchecked -Xswiftc -Rpass-missed=loop-vectorize -Xswiftc -Rpass=loop-vectorize -Xswiftc -Xllvm -Xswiftc -force-vector-width=4 -Xswiftc -Xllvm -Xswiftc -force-vector-interleave=4
 run: $(sources)
 	swift run -c release
 
