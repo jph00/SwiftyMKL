@@ -1,6 +1,5 @@
 import Foundation
-import CMKL
-import CIPP
+import CSwiftyMKL
 
 
 extension Vector {
@@ -141,7 +140,6 @@ extension Vector {
   public func vectorJaehne(_ pDst:Self, _ magn:Element) {return Element.vectorJaehne(pDst.p,self.c,magn)}
   public func vectorSlope(_ pDst:Self, _ offset:Element, _ slope:Element) {return Element.vectorSlope(pDst.p,self.c,offset,slope)}
   public func addC(_ val:Element, _ pDst:Self) {return Element.addC(self.p,val,pDst.p,self.c)}
-  public func addProductC(_ val:Element, _ pSrcDst:Self) {return Element.addProductC(self.p,val,pSrcDst.p,self.c)}
   public func addProduct(_ pSrc2:Self, _ pSrcDst:Self) {return Element.addProduct(self.p,pSrc2.p,pSrcDst.p,self.c)}
   public func mulC(_ val:Element, _ pDst:Self) {return Element.mulC(self.p,val,pDst.p,self.c)}
   public func subC(_ val:Element, _ pDst:Self) {return Element.subC(self.p,val,pDst.p,self.c)}
@@ -197,18 +195,6 @@ extension Vector {
   public func sampleUp(_ srcLen:Int, _ pDst:Self, _ pDstLen:UnsafeMutablePointer<Int32>, _ factor:Int, _ pPhase:UnsafeMutablePointer<Int32>) {return Element.sampleUp(self.p,srcLen,pDst.p,pDstLen,factor,pPhase)}
   public func sampleDown(_ srcLen:Int, _ pDst:Self, _ pDstLen:UnsafeMutablePointer<Int32>, _ factor:Int, _ pPhase:UnsafeMutablePointer<Int32>) {return Element.sampleDown(self.p,srcLen,pDst.p,pDstLen,factor,pPhase)}
   public func filterMedian(_ pDst:Self, _ maskSize:Int, _ pDlySrc:Self, _ pDlyDst:Self, _ pBuffer:UnsafeMutablePointer<UInt8>) {return Element.filterMedian(self.p,pDst.p,self.c,maskSize,pDlySrc.p,pDlyDst.p,pBuffer)}
-  public func rngCauchy(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element)->Int32 {return Element.rngCauchy(method,stream,self.c,r.p,a,b)}
-  public func rngUniform(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element)->Int32 {return Element.rngUniform(method,stream,self.c,r.p,a,b)}
-  public func rngGaussian(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element)->Int32 {return Element.rngGaussian(method,stream,self.c,r.p,a,b)}
-  public func rngGaussianMV(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ dimen:Int, _ mstorage:Int32, _ t:Self)->Int32 {return Element.rngGaussianMV(method,stream,self.c,r.p,dimen,mstorage,self.p,t.p)}
-  public func rngExponential(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element)->Int32 {return Element.rngExponential(method,stream,self.c,r.p,a,b)}
-  public func rngLaplace(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element)->Int32 {return Element.rngLaplace(method,stream,self.c,r.p,a,b)}
-  public func rngWeibull(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element, _ c:Element)->Int32 {return Element.rngWeibull(method,stream,self.c,r.p,a,b,c)}
-  public func rngRayleigh(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element)->Int32 {return Element.rngRayleigh(method,stream,self.c,r.p,a,b)}
-  public func rngLognormal(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element, _ c:Element, _ d:Element)->Int32 {return Element.rngLognormal(method,stream,self.c,r.p,a,b,c,d)}
-  public func rngGumbel(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element)->Int32 {return Element.rngGumbel(method,stream,self.c,r.p,a,b)}
-  public func rngGamma(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element, _ c:Element)->Int32 {return Element.rngGamma(method,stream,self.c,r.p,a,b,c)}
-  public func rngBeta(_ method:Int32, _ stream:VSLStreamStatePtr, _ r:Self, _ a:Element, _ b:Element, _ c:Element, _ d:Element)->Int32 {return Element.rngBeta(method,stream,self.c,r.p,a,b,c,d)}
 
   func new_call(_ f:(Self)         ->()              )->Self { let res = new(); f(      res); return res }
   func new_call(_ f:(Self, Self)   ->(), _ b:Self    )->Self { let res = new(); f(b,    res); return res }

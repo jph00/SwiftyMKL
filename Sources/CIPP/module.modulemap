@@ -1,9 +1,0 @@
-module CIPP {
-  umbrella header "cipp.h"
-  link "ippi"
-  link "ipps"
-  link "ippvm"
-  link "ippcore"
-  export *
-}
-

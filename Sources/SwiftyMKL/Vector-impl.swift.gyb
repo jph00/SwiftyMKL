@@ -1,11 +1,10 @@
 import Foundation
-import CMKL
-import CIPP
+import CSwiftyMKL
 
 %{
 import sys; sys.path.append('../..');
 from funcs import *
-all_lines = sm_lines+cblas_lines+vml_lines+ipps_lines+rng_lines
+all_lines = sm_lines+cblas_lines+vml_lines+ipps_lines#+rng_lines
 all_h = [MklHeader(o) for o in all_lines]
 }%
 

@@ -1,7 +1,5 @@
 import Foundation
 import CSwiftyMKL
-import CMKL
-import CIPP
 
 
 public protocol SupportsMKL:BinaryFloatingPoint {
@@ -185,7 +183,6 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   static func vectorJaehne(_ pDst:MutPtrT, _ len:Int, _ magn:Element)
   static func vectorSlope(_ pDst:MutPtrT, _ len:Int, _ offset:Element, _ slope:Element)
   static func addC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
-  static func addProductC(_ pSrc:PtrT, _ val:Element, _ pSrcDst:MutPtrT, _ len:Int)
   static func addProduct(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pSrcDst:MutPtrT, _ len:Int)
   static func mulC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
   static func subC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
@@ -399,7 +396,6 @@ extension Float : SupportsMKL {
   public static func vectorJaehne(_ pDst:MutPtrT, _ len:Int, _ magn:Element) {_=ippsVectorJaehne_32f(pDst,numericCast(len),magn)}
   public static func vectorSlope(_ pDst:MutPtrT, _ len:Int, _ offset:Element, _ slope:Element) {_=ippsVectorSlope_32f(pDst,numericCast(len),offset,slope)}
   public static func addC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsAddC_32f(pSrc,val,pDst,numericCast(len))}
-  public static func addProductC(_ pSrc:PtrT, _ val:Element, _ pSrcDst:MutPtrT, _ len:Int) {_=ippsAddProductC_32f(pSrc,val,pSrcDst,numericCast(len))}
   public static func addProduct(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pSrcDst:MutPtrT, _ len:Int) {_=ippsAddProduct_32f(pSrc1,pSrc2,pSrcDst,numericCast(len))}
   public static func mulC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsMulC_32f(pSrc,val,pDst,numericCast(len))}
   public static func subC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsSubC_32f(pSrc,val,pDst,numericCast(len))}
@@ -612,7 +608,6 @@ extension Double : SupportsMKL {
   public static func vectorJaehne(_ pDst:MutPtrT, _ len:Int, _ magn:Element) {_=ippsVectorJaehne_64f(pDst,numericCast(len),magn)}
   public static func vectorSlope(_ pDst:MutPtrT, _ len:Int, _ offset:Element, _ slope:Element) {_=ippsVectorSlope_64f(pDst,numericCast(len),offset,slope)}
   public static func addC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsAddC_64f(pSrc,val,pDst,numericCast(len))}
-  public static func addProductC(_ pSrc:PtrT, _ val:Element, _ pSrcDst:MutPtrT, _ len:Int) {_=ippsAddProductC_64f(pSrc,val,pSrcDst,numericCast(len))}
   public static func addProduct(_ pSrc1:PtrT, _ pSrc2:PtrT, _ pSrcDst:MutPtrT, _ len:Int) {_=ippsAddProduct_64f(pSrc1,pSrc2,pSrcDst,numericCast(len))}
   public static func mulC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsMulC_64f(pSrc,val,pDst,numericCast(len))}
   public static func subC(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {_=ippsSubC_64f(pSrc,val,pDst,numericCast(len))}

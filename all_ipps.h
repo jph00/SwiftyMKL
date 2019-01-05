@@ -6,7 +6,6 @@ IPPAPI(IppStatus, ippsTriangle_32f,  (Ipp32f*  pDst, int len, Ipp32f magn, Ipp32
 IPPAPI(IppStatus, ippsVectorJaehne_32f, (Ipp32f* pDst, int len, Ipp32f magn))
 IPPAPI(IppStatus, ippsVectorSlope_32f, (Ipp32f* pDst, int len, Ipp32f offset, Ipp32f slope))
 IPPAPI(IppStatus, ippsAddC_32f,       (const Ipp32f*  pSrc, Ipp32f  val, Ipp32f*  pDst,    int len))
-IPPAPI(IppStatus, ippsAddProductC_32f, (const Ipp32f* pSrc, const Ipp32f val, Ipp32f* pSrcDst, int len))
 IPPAPI(IppStatus, ippsAddProduct_32f,        (const Ipp32f*  pSrc1, const Ipp32f*  pSrc2, Ipp32f*  pSrcDst, int len))
 IPPAPI(IppStatus, ippsMulC_32f,         (const Ipp32f*  pSrc, Ipp32f  val, Ipp32f*  pDst,    int len))
 IPPAPI(IppStatus, ippsSubC_32f,       (const Ipp32f*  pSrc, Ipp32f  val, Ipp32f*  pDst,    int len))

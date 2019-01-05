@@ -1,9 +1,0 @@
-module CMKL {
-  umbrella header "cmkl.h"
-  link "mkl_intel_lp64"
-  link "mkl_sequential"
-  link "mkl_core"
-  link "m"
-  export *
-}
-
