@@ -1,3 +1,7 @@
+Darwin/
+Darwin.tgz
+Linux/
+Linux.tgz
 *.swp
 intel64/
 __pycache__

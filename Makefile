@@ -1,28 +1,59 @@
-# TODO: put all libs and headers in one archive
-# This is for static compilation, although it doesn't work as a static lib yet. It also doesn't work with VSL.
-#link_args := -Xlinker ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a -Xlinker ${MKLROOT}/lib/intel64/libmkl_sequential.a -Xlinker ${MKLROOT}/lib/intel64/libmkl_core.a -Xlinker ${IPPROOT}/lib/intel64/libippi.a -Xlinker ${IPPROOT}/lib/intel64/libipps.a -Xlinker ${IPPROOT}/lib/intel64/libippvm.a -Xlinker ${IPPROOT}/lib/intel64/libippcore.a -Xlinker -lpthread -Xlinker -lm -Xlinker -ldl
-#link_args := -Xlinker -L. -Xlinker -lSwiftyMKL-Static
-link_args := -Xlinker -L${MKLROOT}/lib -Xlinker -L${IPPROOT}/lib -Xlinker -lippi -Xlinker -lipps -Xlinker -lippvm -Xlinker -lippcore -Xlinker -lmkl_intel_lp64 -Xlinker -lmkl_sequential -Xlinker -lmkl_core -Xlinker -lm
-#link_args := -Xlinker -L/home/jhoward/git/SwiftyMKL/intel64 -Xlinker -lipp_custom -Xlinker -lmkl_custom -Xlinker -lm -Xlinker -lpthread -Xlinker -ldl
+ifeq ($(mode),)
+mode := debug
+endif
+
+# Adapted from vadimeisenbergibm/SwiftResourceHandlingExample
+#   Darwin version untested
+UNAME = ${shell uname}
+ifeq ($(UNAME), Darwin)
+PLATFORM = x86_64-apple-macosx*
+EXECUTABLE = ./.build/${PLATFORM}/${mode}
+TEST = ./.build/${PLATFORM}/${mode}/*.xctest/Contents/Resources
+else ifeq ($(UNAME), Linux)
+PLATFORM = x86_64-unknown-linux
+EXECUTABLE = ./.build/${PLATFORM}/${mode}
+TEST = ${EXECUTABLE}
+endif
+
+# Use these if linking against full IPP/MKL
+#libs := $(addprefix -l,ippi ipps ippvm ippcore mkl_intel_lp64 mkl_sequential mkl_core m pthread dl)
+#libs_args := -Xcc -I${MKLROOT}/include -Xcc -I${IPPROOT}/include $(addprefix -Xlinker ,-L${MKLROOT}/lib -L${IPPROOT}/lib $(libs))
+
+libs := $(addprefix -l,mkl_custom ipp_custom m pthread dl)
+libs_args := -Xcc -I./$(UNAME) $(addprefix -Xlinker ,-L./$(UNAME) $(libs))
+
+#$(addprefix -Xswiftc ,-Ounchecked -Rpass-missed=loop-vectorize -Rpass=loop-vectorize -Xllvm -force-vector-width=4 -Xllvm -force-vector-interleave=4)
+xtra_args := -Xswiftc -Ounchecked -Xcc -ffast-math
+link_args := $(libs_args) $(xtra_args)
+
 source_gybs := $(patsubst %.swift.gyb,%.swift,$(wildcard Sources/SwiftyMKL/*.swift.gyb))
 conv_gybs := $(source_gybs) Tests/SwiftyMKLTests/SwiftyMKLTests.swift Tests/LinuxMain.swift
 sources := $(wildcard Sources/SwiftyMKL/*.swift) $(wildcard Tests/SwiftyMKLTests/*.swift) Tests/LinuxMain.swift $(conv_gybs) Sources/CSwiftyMKL/CSwiftyMKL.c Sources/CSwiftyMKL/include/CSwiftyMKL.h
 headers := $(wildcard all_%.h)
 
-all: build
+yaml := ./.build/${mode}.yaml
+run_args := -c $(mode) $(link_args)
 
-#-Xswiftc -Ounchecked -Xswiftc -Rpass-missed=loop-vectorize -Xswiftc -Rpass=loop-vectorize -Xswiftc -Xllvm -Xswiftc -force-vector-width=4 -Xswiftc -Xllvm -Xswiftc -force-vector-interleave=4
-# -Xcc -ffast-math -Xswiftc -Rpass-missed=loop-vectorize -Xswiftc -Rpass=loop-vectorize -Xswiftc -Xllvm -Xswiftc -force-vector-width=4 -Xswiftc -Xllvm -Xswiftc -force-vector-interleave=4
-run: $(sources)
-	swift run -c release $(link_args) -Xswiftc -Ounchecked -Xcc -ffast-math
+all: $(yaml)
 
-test: $(sources)
-	swift test $(link_args)
+run: $(yaml)
+	swift run $(run_args)
 
-build: $(sources)
-	swift build -v -c release $(link_args)
+test: $(yaml)
+	swift test $(run_args)
+
+$(yaml): $(sources) $(UNAME)
+	swift build -v $(run_args)
+	cp $(UNAME)/*.so $(EXECUTABLE)/
+	cp $(UNAME)/*.so $(TEST)/
 
 Tests/LinuxMain.swift: Tests/SwiftyMKLTests/SwiftyMKLTests.swift
+
+$(UNAME): $(UNAME).tgz
+	tar xf $(UNAME).tgz
+
+$(UNAME).tgz:
+	wget http://files.fast.ai/files/$(UNAME).tgz
 
 Tests/%.swift: Tests/%.swift.gyb
 	gyb --line-directive '' -o $@ $<
