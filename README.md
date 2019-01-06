@@ -4,12 +4,12 @@ A Swift wrapper for Intel Performance Libraries.
 
 ## Current status
 
-The `Vector` protocol provides access to Intel Performance Libraries functionality, and is added as an extension to:
+The `Vector` protocol provides access to Intel Performance Libraries functionality, supports RandomAccessCollection, MutableCollection, ExpressibleByArrayLiteral, and CustomStringConvertible, and is added as an extension to:
 
 - Regular swift arrays
 - `struct VectorP` which aligns storage on 64bit boundaries for better performance
 
-What works:
+Currently provided (more to come!):
 
 - Basic unary and binary MKL and IPP functions
 - MKL random number generators
@@ -18,13 +18,15 @@ What works:
 
 ## Building
 
-Only tested on Linux, but should work on Mac too. Assuming you selected the defaults when installing the Intel Performance Libraries, you can add them to the environment
-with:
+Tested on Windows 10 and MacOS 10. No prerequisites other than standard Swift
+command line tools.
 
-```bash
-source ~/intel/compilers_and_libraries/linux/mkl/bin/mklvars.sh intel64
-source ~/intel/compilers_and_libraries/linux/ipp/bin/ippvars.sh intel64 linux
-```
+Running `make` will download and unzip the appropriate MKL and IPP libraries for your
+system (if not done before) and build the library. For release mode (up to 100x
+faster!) run `make mode=release`. You can add `mode=release` to any of the below
+make commands too:
 
-Then run `make test` for unit tests, or `make run` for a small benchmark.
+- `make run`: run a small benchmark
+- `make test`: unit tests (Swift on Mac doesn't know how to find them however,
+  but works fine on Linux)
 
