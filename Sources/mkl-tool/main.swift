@@ -14,7 +14,7 @@ IPP.setup()
 
 func benchmarkTime(f: ()->()) -> Double {
     let start = CFAbsoluteTimeGetCurrent()
-    for _ in 0..<100 {f()}
+    for _ in 0..<10 {f()}
     return CFAbsoluteTimeGetCurrent() - start
 }
 
@@ -28,6 +28,7 @@ public typealias E=Float
 public typealias T = VectorP<E>
 let size = 100000
 var ptr = T(size)
+ptr.set(1.0)
 ptr[3] = -1.2
 ptr[5] =  0.2
 var ptr2 = ptr.copy()
@@ -57,26 +58,16 @@ benchmark(title:"ipp sum") {a1 = ptr.sum()}
 benchmark(title:"reduce sum") {a2 = ar1.reduce(0.0, +)}
 benchmark(title:"swift loop sum") {a3 = sumO(ptr.count, ptr.p)}
 benchmark(title:"C sum") {a4 = smSum_32f(ptr.p, numericCast(ptr.count))}
-print([a1,a2,a3])
+print([a1,a2,a3,a4])
 
-func divCRevO1(_ n:Int, _ pSrc:UnsafeMutablePointer<E>, _ val:E, _ pDst:UnsafeMutablePointer<E>) {
-  for i in 0..<n {pDst[i] = val/pSrc[i]}
-}
-
-func divCRevO(_ pSrc:Array<E>, _ val:E, _ pDst: Array<E>) {
-  let n=pSrc.count
-  let p1 = pSrc.p
-  let p2 = pDst.p
-  for i in 0..<n {p2[i] = val/p1[i]}
-}
-
-benchmark(title:"sm divCRev") {ptr.divCRev(2.0, ptr2)}
+benchmark(title:"swift divCRev") { divCRev(ptr.count, ptr.p, 2.0, ptr2.p) }
 print(ptr2.min())
-benchmark(title:"swift divCRev") { divCRevO(ar1, 2.0, ar2) }
+benchmark(title:"swift divCRev arr") { divCRev(ar1, 2.0, ar2) }
 print(ar2.min())
 
-benchmark(title:"ptr divCRev") { divCRev(ptr.count, ptr.p, 2.0, ptr2.p) }
-benchmark(title:"ptr divCRev2") { divCRev(ptr, 2.0, ptr2) }
 benchmark(title:"C divCRev") { E.smDivCRev(ptr.p, 2.0, ptr2.p, ptr.count) }
+print(ptr2.min())
+
+benchmark(title:"sm divCRev") {ptr.divCRev(2.0, ptr2)}
 print(ptr2.min())
 

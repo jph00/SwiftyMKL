@@ -1,4 +1,4 @@
-import CSwiftyMKL
+import CIPL
 
 public struct MKL {
   public static func get_version_string()->String {

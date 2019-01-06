@@ -1,4 +1,5 @@
 import CSwiftyMKL
+import CIPL
 
 // #defines from mkl_vsl_defines.h not auto-converted by swift
 let VSL_BRNG_INC:Int32 = 1<<VSL_BRNG_SHIFT

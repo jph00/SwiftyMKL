@@ -1,5 +1,6 @@
 import Foundation
 import CSwiftyMKL
+import CIPL
 
 
 public protocol SupportsMKL:BinaryFloatingPoint {

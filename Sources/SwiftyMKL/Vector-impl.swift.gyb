@@ -1,5 +1,6 @@
 import Foundation
 import CSwiftyMKL
+import CIPL
 
 %{
 import sys; sys.path.append('../..');

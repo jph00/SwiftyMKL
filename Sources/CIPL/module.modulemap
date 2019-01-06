@@ -1,0 +1,6 @@
+module CIPL {
+    umbrella header "cipl.h"
+    link "intel_pl"
+    export *
+}
+

@@ -1,4 +1,4 @@
-import CSwiftyMKL
+import CIPL
 
 public struct IPP {
   public static func setup() { if ippInit() != ippStsNoErr { print("ippInit failed") } }
