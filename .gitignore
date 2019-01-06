@@ -1,3 +1,5 @@
+*.so
+*.dylib
 Darwin/
 Darwin.tgz
 Linux/
