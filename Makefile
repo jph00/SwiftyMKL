@@ -2,12 +2,16 @@ ifeq ($(mode),)
 mode := debug
 endif
 
+#$(addprefix -Xswiftc ,-Rpass-missed=loop-vectorize -Rpass=loop-vectorize -Xllvm -force-vector-width=4 -Xllvm -force-vector-interleave=4)
+xtra_args := -Xswiftc -Ounchecked -Xcc -ffast-math
+
 # Adapted from vadimeisenbergibm/SwiftResourceHandlingExample
 UNAME = ${shell uname}
 ifeq ($(UNAME), Darwin)
 PLATFORM = x86_64-apple-macosx*
 EXECUTABLE = ./.build/${PLATFORM}/${mode}
 LIB_SUF = dylib
+xtra_args := $(xtra_args) -Xlinker -rpath -Xlinker ${shell pwd}/Darwin
 else ifeq ($(UNAME), Linux)
 PLATFORM = x86_64-unknown-linux
 EXECUTABLE = ./.build/${PLATFORM}/${mode}
@@ -23,8 +27,6 @@ custom := ./$(UNAME)
 libs_args := -Xcc -I$(custom) -Xlinker -L$(custom)
 prefix := LD_LIBRARY_PATH=$(custom)
 
-#$(addprefix -Xswiftc ,-Rpass-missed=loop-vectorize -Rpass=loop-vectorize -Xllvm -force-vector-width=4 -Xllvm -force-vector-interleave=4)
-xtra_args := -Xswiftc -Ounchecked -Xcc -ffast-math
 link_args := $(libs_args) $(xtra_args)
 
 source_gybs := $(patsubst %.swift.gyb,%.swift,$(wildcard Sources/SwiftyMKL/*.swift.gyb))

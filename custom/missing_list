@@ -72,3 +72,4 @@ MKL_Get_Version_String
 MKL_Get_Version
 MKL_malloc
 MKL_free
+mkl_serv_finalize
