@@ -44,7 +44,8 @@ sys_libs := $(addprefix -l,m pthread dl)
 ifeq ($(UNAME), Darwin)
 	compiler := gcc -arch x86_64 -dynamiclib -single_module -install_name "@rpath/$(name)"
 else ifeq ($(UNAME), Linux)
-	gcc -shared -Wlcompiler := ,-z,relro,-z,now -Bdynamic
+	ipl_libs := -Wl,--start-group $(ipl_libs) -Wl,--end-group
+	compiler := gcc -shared -Wl,-z,relro,-z,now -Bdynamic
 endif
 
 all:
@@ -54,8 +55,4 @@ all:
 	$(ipl_libs) \
 	$(sys_libs) \
 	-o "$(name)"
-
-	#-L"$(compiler_libpath)" \
-	#-u mkl_serv_finalize -Wl,-fini=mkl_serv_finalize \
-	#-Wl,--start-group $(ipl_libs) -Wl,--end-group \
 
