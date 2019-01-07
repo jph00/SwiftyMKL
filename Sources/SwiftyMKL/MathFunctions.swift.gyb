@@ -6,13 +6,12 @@ import CIPL
 import sys; sys.path.append('../..')
 from funcs import *
 
-# Scalar functions with Float and Double specialized versions
-funcs1 = (('pow','Foundation'), ('min', 'Swift'), ('max', 'Swift'))
-# CGFloat unary functions
-funcs2 = """acos acosh asin asinh atan atanh cbrt cos cosh erf erfc exp exp2 expm1 j0 j1 log log10 log1p log2 logb
-nearbyint rint sin sinh tan tanh tgamma y0 y1""".split()
-# CGFloat binary functions
-funcs3 = "atan2 copysign fdim fmax fmin hypot nextafter".split()
+funcs1 = ['min', 'max']
+# unary functions
+funcs2 = """acos acosh asin asinh atan atanh cbrt cos cosh erf erfc exp exp2 expm1 log log10 log1p log2 logb
+nearbyint rint sin sinh tan tanh tgamma""".split()
+# binary functions
+funcs3 = "pow atan2 copysign fdim fmax fmin hypot nextafter".split()
 
 # Vector functions
 all_lines = sm_lines+cblas_lines+vml_lines+ipps_lines+rng_lines
@@ -24,12 +23,10 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   typealias PtrT = UnsafePointer<Element> 
   typealias MutPtrT = UnsafeMutablePointer<Element>
 
-  init(_ value: CGFloat)
   init(_ value: Self)
   init()
-  var cgfloat : CGFloat {get}
 
-% for f,_ in funcs1:
+% for f in funcs1+funcs3:
   func ${f}(_ b: Self) -> Self
 % end # f
 % for f in funcs2:
@@ -43,32 +40,26 @@ public protocol SupportsMKL:BinaryFloatingPoint {
 
 % for t,l,n in typ_typs:
 extension ${t} : SupportsMKL {
-  public var cgfloat : CGFloat { return CGFloat(self) }
-
-  % for f,s in funcs1:
-  public func ${f}(_ b: ${t}) -> ${t} {return ${s}.${f}(self, b)}
+  % for f in funcs1:
+  public func ${f}(_ b: ${t}) -> ${t} {return Swift.${f}(self, b)}
   % end # f,s
 
   % for h in all_h:
   ${h.impl_all(t)}
   % end
-}
-% end # t
 
-extension SupportsMKL {
   % for f in funcs2:
-  public func ${f}() -> Self {return .init(Foundation.${f}(cgfloat))}
+  public func ${f}() -> ${t} {return Foundation.${f}(self)}
   % end # f
 
   % for f in funcs3:
-  public func ${f}(_ b: Self) -> Self {return .init(Foundation.${f}(cgfloat, b.cgfloat))}
+  public func ${f}(_ b: ${t}) -> ${t} {return Foundation.${f}(self, b)}
   % end # f
 }
+% end # t
 
 precedencegroup ExponentiationPrecedence { associativity: right higherThan: MultiplicationPrecedence }
 infix operator ^^: ExponentiationPrecedence
 
-public func ^^<Element:SupportsMKL> (base:Element, power:Element) -> Element {
-  return base.pow(power)
-}
+public func ^^<Element:SupportsMKL> (x:Element, a:Element) -> Element { return x.pow(a) }
 

@@ -29,9 +29,11 @@ prefix := LD_LIBRARY_PATH=$(custom)
 
 link_args := $(libs_args) $(xtra_args)
 
-source_gybs := $(patsubst %.swift.gyb,%.swift,$(wildcard Sources/SwiftyMKL/*.swift.gyb))
-conv_gybs := $(source_gybs) Tests/SwiftyMKLTests/SwiftyMKLTests.swift Tests/LinuxMain.swift
-sources := $(wildcard Sources/SwiftyMKL/*.swift) $(wildcard Tests/SwiftyMKLTests/*.swift) Tests/LinuxMain.swift $(conv_gybs) Sources/CSwiftyMKL/CSwiftyMKL.c Sources/CSwiftyMKL/include/CSwiftyMKL.h
+gybs := $(shell find Sources Tests -type f -name '*.gyb')
+conv_gybs := $(patsubst %.gyb,%,$(gybs))
+sources := $(conv_gybs) $(shell find Sources Tests -type f -name '*.swift')
+sources := $(sources) $(shell find Sources Tests -type f -name '*.c')
+sources := $(sources) $(shell find Sources Tests -type f -name '*.h')
 headers := $(wildcard all_%.h)
 
 yaml := ./.build/${mode}.yaml
@@ -60,14 +62,16 @@ $(custom_dir): $(UNAME).tgz
 $(UNAME).tgz:
 	wget http://files.fast.ai/files/$(UNAME).tgz
 
-Tests/%.swift: Tests/%.swift.gyb
+%.swift: %.swift.gyb
 	gyb --line-directive '' -o $@ $<
 
-Tests/SwiftyMKL/%.swift: Tests/SwiftyMKL/%.swift.gyb
+%.c: %.c.gyb
 	gyb --line-directive '' -o $@ $<
 
-Sources/SwiftyMKL/%.swift: Sources/SwiftyMKL/%.swift.gyb funcs.py mkl_funcs.py
+%.h: %.h.gyb
 	gyb --line-directive '' -o $@ $<
+
+Sources/SwiftyMKL/MathFunctions.swift Sources/SwiftyMKL/Vector-impl.swift: mkl_funcs.py funcs.py
 
 mkl_funcs.py: get_headers.py $(headers)
 	python get_headers.py

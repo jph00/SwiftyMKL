@@ -1,10 +1,17 @@
-@inlinable
-public func divCRev<E:SupportsMKL>(_ n:Int, _ pSrc:UnsafeMutablePointer<E>, _ val:E, _ pDst:UnsafeMutablePointer<E>) {
-  for i in 0..<n { pDst[i] = val/pSrc[i] }
+
+extension SupportsMKL {
+  @inlinable public static func divCRev(_ n:Int, _ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT) {
+    for i in 0..<n { pDst[i] = val/pSrc[i] }
+  }
+
+  @inlinable public static func sinO(_ n:Int, _ pSrc:PtrT, _ pDst:MutPtrT) {
+    for i in 0..<n { pDst[i] = pSrc[i].sin() }
+  }
 }
 
-@inlinable
-public func divCRev<T:Vector>(_ pSrc:T, _ val:T.Element, _ pDst:T) {
-  divCRev(pSrc.count, pSrc.p, val, pDst.p)
+extension Vector {
+  @inlinable public func sinO(_ pDst:Self) { Element.sin(c, p, pDst.p) }
+  @inlinable public static func divCRev(_ pSrc:Self, _ val:Element, _ pDst:Self) { Element.divCRev(pSrc.c, pSrc.p, val, pDst.p) }
+  @inlinable public        func divCRev(             _ val:Element, _ pDst:Self) { Self.divCRev(self, val, pDst) }
 }
-
+ 

@@ -72,7 +72,7 @@ def c2swift(s):
 def vml_name(n,t='Float'): return f'v{"s" if t=="Float" else "d"}{n}'
 def cblas_name(n,t='Float'): return f'cblas_{"s" if t=="Float" else "d"}{n}'
 def ipp_name(n,t='Float'): return f'ipps{n}_{"32f" if t=="Float" else "64f"}'
-def sm_name(n,t='Float'): return f'sm{n}_{"32f" if t=="Float" else "64f"}'
+def sm_name(n,t='Float'): return f'sm{n}_{"float" if t=="Float" else "double"}'
 name_lu = dict(vml=vml_name, cblas=cblas_name, ipp=ipp_name, sm=sm_name)
 
 def get_call(n,ty):

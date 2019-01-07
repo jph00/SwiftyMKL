@@ -8,14 +8,19 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   typealias PtrT = UnsafePointer<Element> 
   typealias MutPtrT = UnsafeMutablePointer<Element>
 
-  init(_ value: CGFloat)
   init(_ value: Self)
   init()
-  var cgfloat : CGFloat {get}
 
-  func pow(_ b: Self) -> Self
   func min(_ b: Self) -> Self
   func max(_ b: Self) -> Self
+  func pow(_ b: Self) -> Self
+  func atan2(_ b: Self) -> Self
+  func copysign(_ b: Self) -> Self
+  func fdim(_ b: Self) -> Self
+  func fmax(_ b: Self) -> Self
+  func fmin(_ b: Self) -> Self
+  func hypot(_ b: Self) -> Self
+  func nextafter(_ b: Self) -> Self
   func acos() -> Self
   func acosh() -> Self
   func asin() -> Self
@@ -30,8 +35,6 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   func exp() -> Self
   func exp2() -> Self
   func expm1() -> Self
-  func j0() -> Self
-  func j1() -> Self
   func log() -> Self
   func log10() -> Self
   func log1p() -> Self
@@ -44,10 +47,8 @@ public protocol SupportsMKL:BinaryFloatingPoint {
   func tan() -> Self
   func tanh() -> Self
   func tgamma() -> Self
-  func y0() -> Self
-  func y1() -> Self
 
-  static func divCRev(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int)
+  static func sum(_ pSrc:PtrT, _ len:Int)
   static func dot(_ N:Int, _ X:PtrT, _ incX:Int, _ Y:PtrT, _ incY:Int)->Element
   static func doti(_ N:Int, _ X:PtrT, _ indx:UnsafePointer<Int32>, _ Y:PtrT)->Element
   static func nrm2(_ N:Int, _ X:PtrT, _ incX:Int)->Element
@@ -254,13 +255,10 @@ public protocol SupportsMKL:BinaryFloatingPoint {
 }
 
 extension Float : SupportsMKL {
-  public var cgfloat : CGFloat { return CGFloat(self) }
-
-  public func pow(_ b: Float) -> Float {return Foundation.pow(self, b)}
   public func min(_ b: Float) -> Float {return Swift.min(self, b)}
   public func max(_ b: Float) -> Float {return Swift.max(self, b)}
 
-  public static func divCRev(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {smDivCRev_32f(pSrc,val,pDst,numericCast(len))}
+  public static func sum(_ pSrc:PtrT, _ len:Int) {smSum_float(pSrc,numericCast(len))}
   public static func dot(_ N:Int, _ X:PtrT, _ incX:Int, _ Y:PtrT, _ incY:Int)->Element {return cblas_sdot(numericCast(N),X,numericCast(incX),Y,numericCast(incY))}
   public static func doti(_ N:Int, _ X:PtrT, _ indx:UnsafePointer<Int32>, _ Y:PtrT)->Element {return cblas_sdoti(numericCast(N),X,indx,Y)}
   public static func nrm2(_ N:Int, _ X:PtrT, _ incX:Int)->Element {return cblas_snrm2(numericCast(N),X,numericCast(incX))}
@@ -464,15 +462,48 @@ extension Float : SupportsMKL {
   public static func rngGumbel(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32 {return vsRngGumbel(method,stream,numericCast(n),r,a,b)}
   public static func rngGamma(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element, _ c:Element)->Int32 {return vsRngGamma(method,stream,numericCast(n),r,a,b,c)}
   public static func rngBeta(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element, _ c:Element, _ d:Element)->Int32 {return vsRngBeta(method,stream,numericCast(n),r,a,b,c,d)}
+
+  public func acos() -> Float {return Foundation.acos(self)}
+  public func acosh() -> Float {return Foundation.acosh(self)}
+  public func asin() -> Float {return Foundation.asin(self)}
+  public func asinh() -> Float {return Foundation.asinh(self)}
+  public func atan() -> Float {return Foundation.atan(self)}
+  public func atanh() -> Float {return Foundation.atanh(self)}
+  public func cbrt() -> Float {return Foundation.cbrt(self)}
+  public func cos() -> Float {return Foundation.cos(self)}
+  public func cosh() -> Float {return Foundation.cosh(self)}
+  public func erf() -> Float {return Foundation.erf(self)}
+  public func erfc() -> Float {return Foundation.erfc(self)}
+  public func exp() -> Float {return Foundation.exp(self)}
+  public func exp2() -> Float {return Foundation.exp2(self)}
+  public func expm1() -> Float {return Foundation.expm1(self)}
+  public func log() -> Float {return Foundation.log(self)}
+  public func log10() -> Float {return Foundation.log10(self)}
+  public func log1p() -> Float {return Foundation.log1p(self)}
+  public func log2() -> Float {return Foundation.log2(self)}
+  public func logb() -> Float {return Foundation.logb(self)}
+  public func nearbyint() -> Float {return Foundation.nearbyint(self)}
+  public func rint() -> Float {return Foundation.rint(self)}
+  public func sin() -> Float {return Foundation.sin(self)}
+  public func sinh() -> Float {return Foundation.sinh(self)}
+  public func tan() -> Float {return Foundation.tan(self)}
+  public func tanh() -> Float {return Foundation.tanh(self)}
+  public func tgamma() -> Float {return Foundation.tgamma(self)}
+
+  public func pow(_ b: Float) -> Float {return Foundation.pow(self, b)}
+  public func atan2(_ b: Float) -> Float {return Foundation.atan2(self, b)}
+  public func copysign(_ b: Float) -> Float {return Foundation.copysign(self, b)}
+  public func fdim(_ b: Float) -> Float {return Foundation.fdim(self, b)}
+  public func fmax(_ b: Float) -> Float {return Foundation.fmax(self, b)}
+  public func fmin(_ b: Float) -> Float {return Foundation.fmin(self, b)}
+  public func hypot(_ b: Float) -> Float {return Foundation.hypot(self, b)}
+  public func nextafter(_ b: Float) -> Float {return Foundation.nextafter(self, b)}
 }
 extension Double : SupportsMKL {
-  public var cgfloat : CGFloat { return CGFloat(self) }
-
-  public func pow(_ b: Double) -> Double {return Foundation.pow(self, b)}
   public func min(_ b: Double) -> Double {return Swift.min(self, b)}
   public func max(_ b: Double) -> Double {return Swift.max(self, b)}
 
-  public static func divCRev(_ pSrc:PtrT, _ val:Element, _ pDst:MutPtrT, _ len:Int) {smDivCRev_64f(pSrc,val,pDst,numericCast(len))}
+  public static func sum(_ pSrc:PtrT, _ len:Int) {smSum_double(pSrc,numericCast(len))}
   public static func dot(_ N:Int, _ X:PtrT, _ incX:Int, _ Y:PtrT, _ incY:Int)->Element {return cblas_ddot(numericCast(N),X,numericCast(incX),Y,numericCast(incY))}
   public static func doti(_ N:Int, _ X:PtrT, _ indx:UnsafePointer<Int32>, _ Y:PtrT)->Element {return cblas_ddoti(numericCast(N),X,indx,Y)}
   public static func nrm2(_ N:Int, _ X:PtrT, _ incX:Int)->Element {return cblas_dnrm2(numericCast(N),X,numericCast(incX))}
@@ -676,53 +707,46 @@ extension Double : SupportsMKL {
   public static func rngGumbel(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element)->Int32 {return vdRngGumbel(method,stream,numericCast(n),r,a,b)}
   public static func rngGamma(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element, _ c:Element)->Int32 {return vdRngGamma(method,stream,numericCast(n),r,a,b,c)}
   public static func rngBeta(_ method:Int32, _ stream:VSLStreamStatePtr, _ n:Int, _ r:MutPtrT, _ a:Element, _ b:Element, _ c:Element, _ d:Element)->Int32 {return vdRngBeta(method,stream,numericCast(n),r,a,b,c,d)}
-}
 
-extension SupportsMKL {
-  public func acos() -> Self {return .init(Foundation.acos(cgfloat))}
-  public func acosh() -> Self {return .init(Foundation.acosh(cgfloat))}
-  public func asin() -> Self {return .init(Foundation.asin(cgfloat))}
-  public func asinh() -> Self {return .init(Foundation.asinh(cgfloat))}
-  public func atan() -> Self {return .init(Foundation.atan(cgfloat))}
-  public func atanh() -> Self {return .init(Foundation.atanh(cgfloat))}
-  public func cbrt() -> Self {return .init(Foundation.cbrt(cgfloat))}
-  public func cos() -> Self {return .init(Foundation.cos(cgfloat))}
-  public func cosh() -> Self {return .init(Foundation.cosh(cgfloat))}
-  public func erf() -> Self {return .init(Foundation.erf(cgfloat))}
-  public func erfc() -> Self {return .init(Foundation.erfc(cgfloat))}
-  public func exp() -> Self {return .init(Foundation.exp(cgfloat))}
-  public func exp2() -> Self {return .init(Foundation.exp2(cgfloat))}
-  public func expm1() -> Self {return .init(Foundation.expm1(cgfloat))}
-  public func j0() -> Self {return .init(Foundation.j0(cgfloat))}
-  public func j1() -> Self {return .init(Foundation.j1(cgfloat))}
-  public func log() -> Self {return .init(Foundation.log(cgfloat))}
-  public func log10() -> Self {return .init(Foundation.log10(cgfloat))}
-  public func log1p() -> Self {return .init(Foundation.log1p(cgfloat))}
-  public func log2() -> Self {return .init(Foundation.log2(cgfloat))}
-  public func logb() -> Self {return .init(Foundation.logb(cgfloat))}
-  public func nearbyint() -> Self {return .init(Foundation.nearbyint(cgfloat))}
-  public func rint() -> Self {return .init(Foundation.rint(cgfloat))}
-  public func sin() -> Self {return .init(Foundation.sin(cgfloat))}
-  public func sinh() -> Self {return .init(Foundation.sinh(cgfloat))}
-  public func tan() -> Self {return .init(Foundation.tan(cgfloat))}
-  public func tanh() -> Self {return .init(Foundation.tanh(cgfloat))}
-  public func tgamma() -> Self {return .init(Foundation.tgamma(cgfloat))}
-  public func y0() -> Self {return .init(Foundation.y0(cgfloat))}
-  public func y1() -> Self {return .init(Foundation.y1(cgfloat))}
+  public func acos() -> Double {return Foundation.acos(self)}
+  public func acosh() -> Double {return Foundation.acosh(self)}
+  public func asin() -> Double {return Foundation.asin(self)}
+  public func asinh() -> Double {return Foundation.asinh(self)}
+  public func atan() -> Double {return Foundation.atan(self)}
+  public func atanh() -> Double {return Foundation.atanh(self)}
+  public func cbrt() -> Double {return Foundation.cbrt(self)}
+  public func cos() -> Double {return Foundation.cos(self)}
+  public func cosh() -> Double {return Foundation.cosh(self)}
+  public func erf() -> Double {return Foundation.erf(self)}
+  public func erfc() -> Double {return Foundation.erfc(self)}
+  public func exp() -> Double {return Foundation.exp(self)}
+  public func exp2() -> Double {return Foundation.exp2(self)}
+  public func expm1() -> Double {return Foundation.expm1(self)}
+  public func log() -> Double {return Foundation.log(self)}
+  public func log10() -> Double {return Foundation.log10(self)}
+  public func log1p() -> Double {return Foundation.log1p(self)}
+  public func log2() -> Double {return Foundation.log2(self)}
+  public func logb() -> Double {return Foundation.logb(self)}
+  public func nearbyint() -> Double {return Foundation.nearbyint(self)}
+  public func rint() -> Double {return Foundation.rint(self)}
+  public func sin() -> Double {return Foundation.sin(self)}
+  public func sinh() -> Double {return Foundation.sinh(self)}
+  public func tan() -> Double {return Foundation.tan(self)}
+  public func tanh() -> Double {return Foundation.tanh(self)}
+  public func tgamma() -> Double {return Foundation.tgamma(self)}
 
-  public func atan2(_ b: Self) -> Self {return .init(Foundation.atan2(cgfloat, b.cgfloat))}
-  public func copysign(_ b: Self) -> Self {return .init(Foundation.copysign(cgfloat, b.cgfloat))}
-  public func fdim(_ b: Self) -> Self {return .init(Foundation.fdim(cgfloat, b.cgfloat))}
-  public func fmax(_ b: Self) -> Self {return .init(Foundation.fmax(cgfloat, b.cgfloat))}
-  public func fmin(_ b: Self) -> Self {return .init(Foundation.fmin(cgfloat, b.cgfloat))}
-  public func hypot(_ b: Self) -> Self {return .init(Foundation.hypot(cgfloat, b.cgfloat))}
-  public func nextafter(_ b: Self) -> Self {return .init(Foundation.nextafter(cgfloat, b.cgfloat))}
+  public func pow(_ b: Double) -> Double {return Foundation.pow(self, b)}
+  public func atan2(_ b: Double) -> Double {return Foundation.atan2(self, b)}
+  public func copysign(_ b: Double) -> Double {return Foundation.copysign(self, b)}
+  public func fdim(_ b: Double) -> Double {return Foundation.fdim(self, b)}
+  public func fmax(_ b: Double) -> Double {return Foundation.fmax(self, b)}
+  public func fmin(_ b: Double) -> Double {return Foundation.fmin(self, b)}
+  public func hypot(_ b: Double) -> Double {return Foundation.hypot(self, b)}
+  public func nextafter(_ b: Double) -> Double {return Foundation.nextafter(self, b)}
 }
 
 precedencegroup ExponentiationPrecedence { associativity: right higherThan: MultiplicationPrecedence }
 infix operator ^^: ExponentiationPrecedence
 
-public func ^^<Element:SupportsMKL> (base:Element, power:Element) -> Element {
-  return base.pow(power)
-}
+public func ^^<Element:SupportsMKL> (x:Element, a:Element) -> Element { return x.pow(a) }
 

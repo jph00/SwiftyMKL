@@ -1,0 +1,4 @@
+% for t in ('float','double'):
+${t} smSum_${t}(const ${t}* restrict pSrc, int len);
+% end # t
+
