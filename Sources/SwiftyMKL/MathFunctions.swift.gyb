@@ -1,37 +1,18 @@
-import Foundation
-import CSwiftyMKL
+import CBaseMath
+import BaseMath
 import CIPL
 
 %{
 import sys; sys.path.append('../..')
 from funcs import *
 
-funcs1 = ['min', 'max']
-# unary functions
-funcs2 = """acos acosh asin asinh atan atanh cbrt cos cosh erf erfc exp exp2 expm1 log log10 log1p log2 logb
-nearbyint rint sin sinh tan tanh tgamma""".split()
-# binary functions
-funcs3 = "pow atan2 copysign fdim fmax fmin hypot nextafter".split()
-
-# Vector functions
-all_lines = sm_lines+cblas_lines+vml_lines+ipps_lines+rng_lines
-all_h = [MklHeader(o) for o in all_lines]
+all_h = [MklHeader(o) for o in cblas_lines+vml_lines+ipps_lines+rng_lines]
 }%
 
-public protocol SupportsMKL:BinaryFloatingPoint {
+public protocol SupportsMKL:SupportsBasicMath {
   typealias Element=Self
   typealias PtrT = UnsafePointer<Element> 
   typealias MutPtrT = UnsafeMutablePointer<Element>
-
-  init(_ value: Self)
-  init()
-
-% for f in funcs1+funcs3:
-  func ${f}(_ b: Self) -> Self
-% end # f
-% for f in funcs2:
-  func ${f}() -> Self
-% end # f
 
 % for h in all_h:
   ${h.decl_all()}
@@ -40,26 +21,9 @@ public protocol SupportsMKL:BinaryFloatingPoint {
 
 % for t,l,n in typ_typs:
 extension ${t} : SupportsMKL {
-  % for f in funcs1:
-  public func ${f}(_ b: ${t}) -> ${t} {return Swift.${f}(self, b)}
-  % end # f,s
-
   % for h in all_h:
   ${h.impl_all(t)}
   % end
-
-  % for f in funcs2:
-  public func ${f}() -> ${t} {return Foundation.${f}(self)}
-  % end # f
-
-  % for f in funcs3:
-  public func ${f}(_ b: ${t}) -> ${t} {return Foundation.${f}(self, b)}
-  % end # f
 }
 % end # t
-
-precedencegroup ExponentiationPrecedence { associativity: right higherThan: MultiplicationPrecedence }
-infix operator ^^: ExponentiationPrecedence
-
-public func ^^<Element:SupportsMKL> (x:Element, a:Element) -> Element { return x.pow(a) }
 

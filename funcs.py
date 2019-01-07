@@ -16,15 +16,11 @@ typ_typs = (('Float', 's', '32'), ('Double', 'd', '64'))
 vml1 = """Ln Abs Inv Sqr Exp Cos Sin Tan Erf Sqrt Cbrt Cosh Sinh Tanh Acos Asin Atan Erfc Ceil Rint Expm1 Log10 Log1p
   Acosh Asinh Atanh Floor Round Trunc ErfInv Pow3o2 Pow2o3 InvSqrt InvCbrt NearbyInt """.split()
 # _Mkl_Api(void,vsAtan2,(const MKL_INT n, const float a[], const float b[], float r[]))
-vml2 = "Add Sub Mul Div Pow Hypot Atan2".split()
+vml2 = "Pow Hypot Atan2".split()
 # float  cblas_sasum(const MKL_INT N, const float *X, const MKL_INT incX)
 cblas1 = "asum nrm2 dot".split()
 # IPPAPI(IppStatus, ippsStdDev_32f, (const Ipp32f* pSrc, int len, Ipp32f* pStdDev, IppHintAlgorithm hint))
-ipp1 = "Sum Mean StdDev Max Min".split()
-# IPPAPI(IppStatus, ippsAddC_32f, (const Ipp32f* pSrc, Ipp32f val, Ipp32f* pDst, int len))
-ipp2  = "SubCRev DivCRev AddC SubC MulC DivC".split()
-# No 'C' needed in names in Swift, due to function overloading
-ipp2b = "SubRev  Add  Sub  Mul  Div ".split()
+ipp1 = "Mean StdDev Max Min".split()
 # IPPAPI(IppStatus, ippsNormDiff_Inf_32f, (const Ipp32f* pSrc1, const Ipp32f* pSrc2, int len, Ipp32f* pNorm))
 ipp3 = "NormDiff_Inf NormDiff_L1 NormDiff_L2".split()
 
@@ -160,11 +156,11 @@ class MklHeader():
         return f'{ret}Element.{self.lname}({pstr})'
 
     def decl_all(self): return f'static func {self.decl()}'
-    def impl_all(self,t): return f'public static func {self.decl()} {{{self.impl(t)}}}'
+    def impl_all(self,t): return f'@inlinable public static func {self.decl()} {{{self.impl(t)}}}'
     def impl_all_inst(self):
         res = self.decl_inst()
         if not res: return
-        return f'public func {self.decl_inst()} {{{self.impl_inst()}}}'
+        return f'@inlinable public func {self.decl_inst()} {{{self.impl_inst()}}}'
 
 def test_parse() :
     vml1_in = "_Mkl_Api(void,vsLog1p,(const MKL_INT n,  const float  a[], float  r[]))"

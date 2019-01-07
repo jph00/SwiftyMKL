@@ -1,4 +1,5 @@
 import XCTest
+import BaseMath
 @testable import SwiftyMKL
 
 protocol TestProtocol {
@@ -111,36 +112,36 @@ extension TestProtocol {
     XCTAssertEqual(r5, exp, "+=")
   }
 
-  func testDivC() {
+  func testDiv() {
     let v:E = 2.0
     let exp = T(v1.map {$0/v})
-    let r1 = v1.divC(v)
+    let r1 = v1.div(v)
     XCTAssertEqual(r1, exp)
     let r2 = v1.copy()
-    v1.divC(v, r2)
+    v1.div(v, r2)
     XCTAssertEqual(r2, exp)
     let r3 = v1 / v
     XCTAssertEqual(r3, exp)
     let r4 = v1.copy()
-    r4.divC_(v)
+    r4.div_(v)
     XCTAssertEqual(r4, exp)
     let r5 = v1.copy()
     r5 /= v
     XCTAssertEqual(r5, exp)
   }
 
-  func testSubCRev() {
+  func testSubRev() {
     let v:E = 2.0
     let exp = T(v1.map {v-$0})
-    let r1 = v1.subCRev(v)
+    let r1 = v1.subRev(v)
     XCTAssertEqual(r1, exp)
     let r2 = v1.copy()
-    v1.subCRev(v, r2)
+    v1.subRev(v, r2)
     XCTAssertEqual(r2, exp)
     let r3 = v - v1 
     XCTAssertEqual(r3, exp)
     let r4 = v1.copy()
-    r4.subCRev_(v)
+    r4.subRev_(v)
     XCTAssertEqual(r4, exp)
   }
 

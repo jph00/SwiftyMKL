@@ -2,10 +2,9 @@ ifeq ($(mode),)
 mode := debug
 endif
 
-#$(addprefix -Xswiftc ,-Rpass-missed=loop-vectorize -Rpass=loop-vectorize -Xllvm -force-vector-width=4 -Xllvm -force-vector-interleave=4)
-xtra_args := -Xswiftc -Ounchecked -Xcc -ffast-math
+xtra_args := -Xswiftc -Ounchecked $(addprefix -Xcc ,-ffast-math -O3 -march=native)
+#xtra_args := #$(xtra_args) $(addprefix -Xcc ,-Rpass-missed=loop-vectorize -Rpass=loop-vectorize) # -Xllvm -force-vector-width=4 -Xllvm -force-vector-interleave=4)
 
-# Adapted from vadimeisenbergibm/SwiftResourceHandlingExample
 UNAME = ${shell uname}
 ifeq ($(UNAME), Darwin)
 PLATFORM = x86_64-apple-macosx*

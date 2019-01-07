@@ -1,9 +1,7 @@
 import Foundation
+import BaseMath
 
-public protocol Vector: BaseVector, Equatable, CustomStringConvertible where Element:SupportsMKL {
-  typealias PtrT = UnsafePointer<Element>
-  typealias MutPtrT = UnsafeMutablePointer<Element>
-}
+public protocol Vector: BaseVector, Equatable, CustomStringConvertible where Element:SupportsMKL { }
 
 extension Vector {
   public static func ==(lhs:Self, rhs:Self) -> Bool { return lhs.elementsEqual(rhs) }
@@ -21,16 +19,11 @@ public struct VectorP<T:SupportsMKL>: Vector, ComposedStorage {
   public init(_ count:Int) { self.init(AlignedStorage(count)) }
   public init(_ array:Array<T>) { self.init(AlignedStorage(array)) }
 
-  public var p:UnsafeMutablePointer<T> {get {return data.p}}
+  public var p:MutPtrT {get {return data.p}}
   public func copy() -> VectorP { return .init(data.copy()) }
 
   public var description: String { return "A\(Array(self).description)" }
 }
 
-extension Array: Vector,BaseVector where Element:SupportsMKL {
-  public init(_ count:Int) { self.init(repeating:0, count:count) }
-
-  public func copy() -> Array { return (self as NSCopying).copy(with: nil) as! Array }
-  public var p:MutPtrT {get {return UnsafeMutablePointer(mutating: self)}}
-}
+extension Array: Vector where Element:SupportsMKL { }
 

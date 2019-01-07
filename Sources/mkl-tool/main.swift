@@ -1,19 +1,21 @@
 import Foundation
 import CoreFoundation
-import CSwiftyMKL
+import CBaseMath
+import BaseMath
 import SwiftyMKL
 
 IPP.setup()
 
 func benchmarkTime(f: ()->()) -> Double {
-    let start = CFAbsoluteTimeGetCurrent()
-    for _ in 0..<10 {f()}
-    return CFAbsoluteTimeGetCurrent() - start
+  let start = CFAbsoluteTimeGetCurrent()
+  for _ in 0..<10 {f()}
+  return CFAbsoluteTimeGetCurrent() - start
 }
 
 func benchmark(title:String, f:()->()) {
-    let time = benchmarkTime(f:f)
-    print("Time for \(title): \(time) s.")
+  f()
+  let time = benchmarkTime(f:f)
+  print("Time for \(title): \(time) s.")
 }
 
 public typealias E=Float
@@ -28,6 +30,10 @@ var ptr2 = ptr.copy()
 var ar1 = Array(ptr)
 var ar2 = Array(ptr)
 
+let p = ptr.p
+let p2 = ptr2.p
+let c:Int32 = numericCast(ptr.c)
+
 func sumO(_ n:Int, _ p1:UnsafeMutablePointer<E>)->E {
   var r = E(0.0)
   for i in 0..<n { r += p1[i] }
@@ -37,25 +43,20 @@ func sumO(_ n:Int, _ p1:UnsafeMutablePointer<E>)->E {
 var a1:E=ptr.sum()
 var a2:E=0
 var a3:E=0
-var a4:E=0
-benchmark(title:"ipp sum") {a1 = ptr.sum()}
+benchmark(title:"lib sum") {a1 = ptr.sum()}
 benchmark(title:"reduce sum") {a2 = ar1.reduce(0.0, +)}
-benchmark(title:"swift loop sum") {a3 = sumO(ptr.count, ptr.p)}
-benchmark(title:"C sum") {a4 = smSum_float(ptr.p, numericCast(ptr.count))}
-print([a1,a2,a3,a4])
+benchmark(title:"swift loop sum") {a3 = sumO(ptr.c, p)}
+print([a1,a2,a3])
 
-benchmark(title:"swift sin") { E.sinO(ptr.count, ptr.p, ptr2.p) }
+benchmark(title:"swift divRev") { E.divRev(ptr.count, p, 2.0, p2) }
 print(ptr2.min())
-benchmark(title:"vec swift sin") {ptr.sinO(ptr2)}
+benchmark(title:"vec divRev arr") { ar1.divRev(2.0, ar2) }
+print(ar2.min())
+benchmark(title:"vec divRev") {ptr.divRev(2.0, ptr2)}
 print(ptr2.min())
+
 benchmark(title:"vec sin") {ptr.sin(ptr2)}
 print(ptr2.min())
-
-benchmark(title:"swift divCRev") { E.divCRev(ptr.count, ptr.p, 2.0, ptr2.p) }
-print(ptr2.min())
-
-benchmark(title:"vec divCRev arr") { ar1.divCRev(2.0, ar2) }
-print(ar2.min())
-benchmark(title:"vec divCRev") {ptr.divCRev(2.0, ptr2)}
-print(ptr2.min())
+benchmark(title:"sumsin") {a1 = ptr.sumsin()}
+print(a1)
 

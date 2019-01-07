@@ -1,4 +1,4 @@
-import CSwiftyMKL
+import BaseMath
 import CIPL
 
 // #defines from mkl_vsl_defines.h not auto-converted by swift
