@@ -1,13 +1,9 @@
 import Foundation
 import BaseMath
 
-public protocol Vector: BaseVector, Equatable, CustomStringConvertible where Element:SupportsMKL { }
+public protocol Vector: BaseVector, CustomStringConvertible where Element:SupportsMKL { }
 
-extension Vector {
-  public static func ==(lhs:Self, rhs:Self) -> Bool { return lhs.elementsEqual(rhs) }
-  public static func ==(lhs:Array<Element>, rhs:Self) -> Bool { return self.init(lhs) == rhs }
-  public static func ==(lhs:Self, rhs:Array<Element>) -> Bool { return lhs == self.init(rhs) }
-}
+extension Vector { }
 
 public struct VectorP<T:SupportsMKL>: Vector, ComposedStorage {
   public typealias Element=T

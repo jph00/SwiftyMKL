@@ -7,9 +7,10 @@ let package = Package(
     products: [
       .library( name: "SwiftyMKL-Static", type: .static, targets: ["SwiftyMKL"]),
     ],
+    dependencies: [
+      .package(url:"https://github.com/jph00/BaseMath.git", from: "1.0.0"),
+    ],
     targets: [
-        .target( name: "CBaseMath"),
-        .target( name: "BaseMath", dependencies: ["CBaseMath"]),
         .systemLibrary(name: "CIPL"),
         .target( name: "SwiftyMKL", dependencies: ["CIPL", "BaseMath"]),
         .target( name: "mkl-tool", dependencies: ["SwiftyMKL"]),
